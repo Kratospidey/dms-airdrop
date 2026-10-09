@@ -1,0 +1,24 @@
+{
+  "id": "dmsAirDrop",
+  "name": "AirDrop",
+  "description": "Native, bounded AirDrop sharing through your existing Omdrop installation",
+  "version": "0.2.1",
+  "author": "DMS AirDrop contributors",
+  "icon": "wifi_tethering",
+  "type": "composite",
+  "capabilities": [
+    "daemon",
+    "dankbar-widget"
+  ],
+  "components": {
+    "daemon": "./AirDropController.qml",
+    "widget": "./AirDropWidget.qml"
+  },
+  "settings": "./AirDropSettings.qml",
+  "requires_dms": ">=1.6.2",
+  "permissions": [
+    "settings_read",
+    "settings_write",
+    "process"
+  ]
+}

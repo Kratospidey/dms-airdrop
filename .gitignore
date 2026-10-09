@@ -1,0 +1,18 @@
+.qa/
+__pycache__/
+*.pyc
+dist/
+.build/
+# Private pre-publication notes and unapproved development images stay local.
+/docs/AUDIT.md
+/docs/PICKER_FIX.md
+/docs/RELEASE_0.2.0.md
+/docs/preview-*.png
+/scripts/rollback-picker.py
+.env
+.env.*
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
