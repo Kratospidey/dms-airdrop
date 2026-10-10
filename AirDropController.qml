@@ -34,7 +34,12 @@ Item {
     property bool lastKnownBusy: false
     readonly property bool popoutVisible: visiblePopouts.length > 0
     readonly property int openInterval: Math.max(10, Math.min(60, Number(pref("openInterval", 15)) || 15)) * 1000
-    readonly property int pollInterval: busy || lastKnownBusy || active || lastKnownActive || temporarySession || prepareRequested || cleanupRequested ? 3000 : popoutVisible ? openInterval : 300000
+    // Receiving/owned discovery is availability, not a running operation.
+    // Backend locks (including cleanup) and queued UI work need fast checks;
+    // session phase alone can outlive a worker and must not pin that rate.
+    readonly property bool fastPolling: busy || lastKnownBusy || prepareRequested || cleanupRequested
+    readonly property bool receivingSession: active || lastKnownActive || temporarySession
+    readonly property int pollInterval: fastPolling ? 3000 : receivingSession ? (popoutVisible ? 3000 : 30000) : popoutVisible ? openInterval : 300000
     readonly property int freshnessLimit: Math.max(30000, pollInterval + 15000)
     readonly property bool clockNeeded: active || busy || temporarySession || selectedFiles.length > 0 || (popoutVisible && peersAt > 0 && now - peersAt < 15000)
     readonly property bool clockRunning: clockTimer.running
@@ -367,7 +372,8 @@ Item {
             }
             if (result.ok) {
                 root.lastKnownActive = result.status.receiving || result.status.visible;
-                root.sampledAt = Date.now();
+                // Keep the sample and interpolated countdown on one timestamp.
+                root.sampledAt = root.now;
                 const receiving = result.status.receiving;
                 if (root.hadStatus && root.wasReceiving && !receiving && !root.pending && result.status.mode === "off" && root.pref("notifyExpiry", false))
                     ToastService.showInfo("AirDrop window closed");

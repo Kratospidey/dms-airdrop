@@ -82,13 +82,20 @@ ShellRoot {
     verify(!c.popoutVisible);compare(c.pollInterval,300000);verify(!c.clockRunning);
    }
    function test_receiving_closed() {
-    create(response(true));compare(c.pollInterval,3000);verify(c.clockRunning);verify(!c.popoutVisible);
-    const count=samples;tryVerify(()=>samples>count,4000);verify(c.timeLabel.length>0);
+    create(response(true));compare(c.pollInterval,30000);verify(c.clockRunning);verify(!c.popoutVisible);
+    verify(c.active);verify(c.lastKnownActive);verify(!c.busy);verify(!c.lastKnownBusy);
+    verify(!c.fastPolling);compare(c.freshnessLimit,45000);
+    const count=samples;const n=c.now;wait(4000);compare(samples,count);verify(c.now>n);verify(c.timeLabel.length>0);
+    // Exercise a full, unmodified background interval in addition to the benchmark.
+    tryVerify(()=>samples>count,28000);compare(samples,count+1);verify(!c.stale);
    }
    function test_countdown_expiry() {
     const value=response(true);value.status.remaining=1;create(value);
     tryCompare(c,"timeLabel","Checking window expiry",2200);verify(c.active);
-    configure(response());tryCompare(c,"state","OFF",4000);verify(!c.clockRunning);
+    compare(c.pollInterval,30000);configure(response());
+    const poll=findChild(c,"statusPoll");poll.interval=200;poll.restart();
+    tryCompare(c,"state","OFF",2000);verify(!c.clockRunning);
+    poll.interval=Qt.binding(()=>c.pollInterval);compare(poll.interval,300000);
    }
    function test_send_completion_closed() {
     const value=response(true);value.busy=true;value.job={id:"send-closed",action:"send",state:"running",updated:Date.now()/1000};create(value);
@@ -100,6 +107,7 @@ ShellRoot {
    function test_temporary_abandonment() {
     create();const value=response(true);value.session={owned:true,phase:"discovering",token:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
     configure(value);c.refresh();tryVerify(()=>c.temporarySession,2000);
+    compare(c.pollInterval,30000);verify(!c.fastPolling);
     c.selectedFiles=["/mock/file"];const expiry=findChild(c,"selectionExpiry");verify(expiry!==null);compare(expiry.interval,300000);
     expiry.interval=50;expiry.start();tryCompare(c,"state","OFF",3000);
     compare(c.selectedFiles.length,0);verify(!c.temporarySession);
@@ -107,7 +115,7 @@ ShellRoot {
    function test_external_activation_reconciliation() {
     create();const poll=findChild(c,"statusPoll");compare(poll.interval,300000);
     configure(response(true));poll.interval=200;poll.restart();tryCompare(c,"state","RECEIVING",2000);
-    poll.interval=Qt.binding(()=>c.pollInterval);compare(poll.interval,3000);verify(c.clockRunning);
+    poll.interval=Qt.binding(()=>c.pollInterval);compare(poll.interval,30000);verify(c.clockRunning);
    }
    function test_reload_receiving() {
     create(response(true));const view=popout();view.parent.shouldBeVisible=true;tryVerify(()=>!c.checking,2000);
@@ -116,8 +124,11 @@ ShellRoot {
    }
    function test_receiving_status_failure_retries() {
     create(response(true));configure({ok:false,code:"status",error:"Transient mock failure"});c.refresh();
-    tryCompare(c,"state","UNKNOWN",2000);compare(c.pollInterval,3000);verify(!c.canAct);
-    configure(response());tryCompare(c,"state","OFF",4000);compare(c.pollInterval,300000);
+    tryCompare(c,"state","UNKNOWN",2000);compare(c.pollInterval,30000);verify(!c.canAct);verify(c.lastKnownActive);verify(!c.lastKnownBusy);
+    // An error must retain background reconciliation, and opening must retry now.
+    const count=samples;configure(response());const view=popout();view.parent.shouldBeVisible=true;
+    compare(c.pollInterval,3000);tryCompare(c,"state","OFF",2000);compare(samples,count+1);compare(c.pollInterval,15000);
+    view.parent.shouldBeVisible=false;compare(c.pollInterval,300000);
    }
    function test_sending_status_failure_and_closed_failure_result() {
     const value=response();value.busy=true;value.job={id:"failed-send",action:"send",state:"running",updated:Date.now()/1000};create(value);
@@ -152,15 +163,72 @@ ShellRoot {
     c.selectedFiles=["/mock/file"];c.startDiscovery();compare(c.pollInterval,3000);
     c.clearSelection();wait(100);verify(!c.prepareRequested);verify(!c.cleanupRequested);compare(c.pollInterval,300000);verify(!c.clockRunning);
    }
+   function test_receiving_open_close() {
+    create(response(true));const a=popout(),b=popout();const count=samples;
+    // Almost-old background status becomes fresh immediately on opening.
+    c.sampledAt=Date.now()-29000;c.syncClock();verify(!c.stale);
+    const value=response(true);value.status.remaining=120;configure(value);
+    a.parent.shouldBeVisible=true;verify(c.stale);compare(c.pollInterval,3000);
+    b.parent.shouldBeVisible=true;tryVerify(()=>!c.stale,2000);compare(samples,count+2);
+    compare(c.backend.remaining,120);compare(c.timeLabel,"2m remaining");
+    const opened=samples;tryVerify(()=>samples>opened,4000);
+    a.parent.shouldBeVisible=false;compare(c.pollInterval,3000);
+    b.parent.shouldBeVisible=false;compare(c.pollInterval,30000);
+    const closed=samples;wait(3500);compare(samples,closed);verify(c.clockRunning);
+   }
+   function test_receiving_modes_closed() {
+    create();
+    for(const mode of ["once","forever"]) {
+     const value=response(true);value.status.mode=mode;value.status.remaining=null;
+     configure(value);c.refresh();tryVerify(()=>!c.checking,2000);
+     compare(c.pollInterval,30000);verify(!c.fastPolling);
+     compare(c.timeLabel,mode==="once"?"Until one transfer arrives":"Until turned off");
+    }
+   }
+   function test_temporary_discovery_and_leftover_phase() {
+    create();c.selectedFiles=["/mock/file"];
+    // A phase may survive a finished/failed worker; only its lock signals busy.
+    for(const phase of ["discovering","cleanup-failed","cleaning","sending"]) {
+     const value=response(true);value.session={owned:true,phase:phase,token:"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"};
+     configure(value);c.refresh();tryVerify(()=>!c.checking,2000);
+     verify(c.temporarySession);verify(!c.prepareRequested);verify(!c.cleanupRequested);compare(c.pollInterval,30000);
+    }
+    const count=samples;wait(3500);compare(samples,count);
+   }
+   function test_pending_work_priority() {
+    create(response(true));
+    c.pending="send";compare(c.pollInterval,3000);c.pending="";compare(c.pollInterval,30000);
+    c.prepareRequested=true;compare(c.pollInterval,3000);c.prepareRequested=false;compare(c.pollInterval,30000);
+    c.cleanupRequested=true;compare(c.pollInterval,3000);c.cleanupRequested=false;compare(c.pollInterval,30000);
+    const value=response(true);value.busy=true;value.session={owned:true,phase:"cleaning"};
+    configure(value);c.refresh();tryVerify(()=>!c.checking,2000);compare(c.state,"CLEANING");compare(c.pollInterval,3000);
+    configure(response(true));tryCompare(c,"busy",false,4000);verify(!c.lastKnownBusy);compare(c.pollInterval,30000);
+   }
+   function test_external_send_and_authoritative_busy_recovery() {
+    const value=response(true);value.external_send=true;create(value);compare(c.state,"SENDING");compare(c.pollInterval,3000);
+    configure({ok:false,code:"timeout",error:"Mock timeout"});c.refresh();tryCompare(c,"state","UNKNOWN",2000);
+    verify(c.lastKnownBusy);compare(c.pollInterval,3000);
+    // Backend can confirm no worker even when receiver/radio status is unavailable.
+    configure({ok:false,busy:false,external_send:false,code:"status",error:"Mock receiver failure"});
+    tryCompare(c,"lastKnownBusy",false,4000);verify(c.lastKnownActive);compare(c.pollInterval,30000);
+    configure(response(true));c.refresh();tryCompare(c,"state","RECEIVING",2000);compare(c.pollInterval,30000);
+   }
+   function test_receiving_stale_recovery_closed() {
+    create(response(true));c.sampledAt=Date.now()-c.freshnessLimit+120;
+    tryVerify(()=>c.stale,1500);verify(!c.canAct);compare(c.timeLabel,"");compare(c.pollInterval,30000);
+    const value=response(true);value.status.remaining=60;configure(value);
+    const poll=findChild(c,"statusPoll");poll.interval=200;poll.restart();tryVerify(()=>c.canAct,2000);
+    compare(c.timeLabel,"1m remaining");poll.interval=Qt.binding(()=>c.pollInterval);compare(poll.interval,30000);
+   }
   }
  }
 }'''.replace('__HELPER__',json.dumps(str(wrapper))))
-    result=subprocess.run(['qs','-p',str(shell/'polling.qml'),'--no-color'],env=environment(),capture_output=True,text=True,timeout=70)
+    result=subprocess.run(['qs','-p',str(shell/'polling.qml'),'--no-color'],env=environment(),capture_output=True,text=True,timeout=120)
     output=result.stdout+result.stderr;print(output)
     report=json.loads(next(line.split('MONITORING_RESULT ',1)[1] for line in output.splitlines() if 'MONITORING_RESULT ' in line))
-    assert result.returncode==0 and report['failed']==0 and report['passed']>=15, report
+    assert result.returncode==0 and report['failed']==0 and report['passed']>=21, report
     assert not any(s in output for s in ['TypeError','ReferenceError','Binding loop','Cannot assign','Error loading configuration'])
     logged=[json.loads(line) for line in calls.read_text().splitlines()]
     assert all(call[0] in ('fixture','status','peers','submit') for call in logged)
     assert all(json.loads(call[1])['action']=='cleanup-send' for call in logged if call[0]=='submit')
-    print('PASS: 14 monitoring cases; all operations stayed in the fixture')
+    print('PASS: 20 monitoring cases; all operations stayed in the fixture')

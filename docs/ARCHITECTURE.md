@@ -73,10 +73,13 @@ discards polls and peer lists started before a newly submitted mutation.
 Closed, idle popouts reconcile status every five minutes. The first open popout
 refreshes immediately and uses a 15-second interval (10–60 configurable under
 `openInterval`). The former `idleInterval` setting no longer controls background
-activity. Active windows, jobs and temporary-session work retain three-second
-polls, even when every popout is closed. A failed probe after known receiving
-or a job keeps the fast reconciliation cadence until a valid snapshot confirms
-the session/job has ended.
+activity. Receiving and owned discovery reconcile every 30 seconds when closed,
+or every three seconds with a popout open. Pending operations, backend workers,
+external sends and requested preparation/cleanup keep three-second checks in
+either state. Session ownership or a leftover phase alone is not a worker.
+A failed probe retains the last known receiving/operation distinction until
+authoritative status clears it: background receiving retries at 30 seconds,
+while an unconfirmed worker stays at three seconds.
 
 Only one controller polls, regardless of monitors. Each popout registers its
 identity using DMS `parentPopout.shouldBeVisible`, unregistering on close,
@@ -92,6 +95,9 @@ and a session is active. Name resolution remains explicit. The clock only
 interpolates backend-reported seconds; after zero it says Checking window expiry.
 The countdown never changes backend state. A separate finite backend timer
 handles abandonment of plugin-owned sending sessions. Stale snapshots disable actions.
+Closed receiving snapshots become stale after 45 seconds without a successful
+probe. Expiry/externally stopped receiving is reflected by the next 30-second
+check or immediately on opening; the underlying deadline is never extended.
 
 The worker rechecks status, external Omdrop send markers, file readability,
 duration and the target's presence under the operation lock. Stop never uses

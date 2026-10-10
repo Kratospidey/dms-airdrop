@@ -61,7 +61,7 @@ PluginSettings {
     SelectionSetting {
         settingKey: "openInterval"
         label: "Open popout status refresh"
-        description: "Opening refreshes immediately. Active sessions refresh every 3 seconds; when closed and idle, status reconciles every 5 minutes."
+        description: "Opening refreshes immediately. Receiving refreshes every 3 seconds while open, or 30 seconds in the background. Operations stay fast; closed and Off checks every 5 minutes."
         defaultValue: "15"
         options: [{label: "10 seconds", value: "10"}, {label: "15 seconds", value: "15"}, {label: "30 seconds", value: "30"}, {label: "60 seconds", value: "60"}]
     }

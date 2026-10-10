@@ -1,6 +1,6 @@
 # Marketplace review corrections
 
-The [first automated review of PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029#issuecomment-6094782411) found unconditional status polling, an unnecessary one-second clock, non-native scrolling and hardcoded row dimensions. These fixes are on `main` for the registry's source checkout. The v0.2.1 tag and release assets remain immutable; this work does not create another release or claim marketplace acceptance.
+The [first automated review of PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029#issuecomment-6094782411) found unconditional status polling, an unnecessary one-second clock, non-native scrolling and hardcoded row dimensions; commit `9aeec67` addressed those findings. The [second review](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029#issuecomment-6095267285) requested slower status checks while receiving with the popout closed. The behavior below includes that correction. Fixes are on `main` for the registry's source checkout. The v0.2.1 tag and release assets remain immutable; this work does not create another release or claim marketplace acceptance.
 
 ## Monitoring behavior
 
@@ -9,8 +9,11 @@ The [first automated review of PR #1029](https://github.com/AvengeMedia/dms-plug
 | Closed and Off/unavailable, no work queued | Initial status, then one reconciliation every 300 seconds |
 | First popout opens | Immediately mark checking, synchronize time and request status |
 | Off with any popout open | 15 seconds by default; 10–60 configurable |
-| Receiving, sending, temporary discovery or queued session work | 3 seconds, independent of visibility |
-| Status fails after known receiving | Keep 3-second reconciliation until a valid snapshot confirms Off |
+| Receiving or owned temporary discovery, closed with no pending work | 30 seconds |
+| Receiving or owned temporary discovery, any popout open | 3 seconds |
+| Sending, backend cleanup or queued preparation/cleanup/operation | 3 seconds, independent of visibility |
+| Status fails after known receiving, no known operation | Keep receiving cadence: 30 seconds closed, 3 seconds open |
+| Status fails with an unconfirmed active operation | Keep 3-second reconciliation until backend worker/send flags confirm completion |
 | Controller reload | Read status immediately; reconcile existing jobs/session ownership |
 
 DMS 1.6.2's `PluginPopout` assigns its object to `parentPopout`; `shouldBeVisible` is the lifecycle signal. Visible popouts register their object identity in the shared daemon. Closing/destroying one of several instances does not suspend the others. Opening a second instance while the shared refresh is pending does not create another process. Hidden component construction does not refresh.
@@ -19,7 +22,18 @@ The old `idleInterval` preference is ignored; the settings page now controls `op
 
 Static idle UI has no one-second timer. The clock resumes for active work, selections or a visible unexpired peer list and immediately synchronizes the timestamp. Freshness has a one-shot deadline, and actions synchronize time before dispatch. The backend still validates every mutation under its existing lock. Omdrop expiry and the independent five-minute session cleanup timer are unchanged.
 
-## Measured process activity
+### Second-review state audit
+
+- `active` is receiver/radio availability. `lastKnownActive` preserves that fact across failed status reads. Neither implies an operation: quiet receiving uses 30 seconds closed, including timed, once and externally enabled forever windows.
+- `busy` covers a pending UI action, its submitting helper, the backend worker/queue lock and external sends. `lastKnownBusy` keeps three-second checks after an unreadable/timeout result; authoritative `busy` and `external_send` flags clear it even if the receiver status probe failed. Ordinary receiving reports both flags false.
+- `temporarySession` is ownership, not activity. Owned discovery uses the receiving cadence; leftover `sending`, `cleaning` or `cleanup-failed` metadata cannot pin fast polling after the worker ends. Live sends/cleanup hold the backend lock, so `busy` already supplies fast polling.
+- `prepareRequested` and `cleanupRequested` represent immediate queued work and retain three seconds. Once submitted, the pending action and then backend lock take over until completion. Selection abandonment still dispatches cleanup immediately; the independent backend timer remains at 300 seconds.
+
+Opening marks status as checking and refreshes immediately, regardless of the remaining background interval. Closing the final receiving popout returns to 30 seconds; closing one of several does not. The local one-second clock keeps the receiving countdown accurate between samples and shows **Checking window expiry** after zero. A successful response uses the same timestamp for the sample and clock, avoiding an extra displayed minute at an exact minute boundary. The clock never extends or closes a backend window. A closed popout may learn that receiving ended on its next check (up to 30 seconds, plus command latency); opening refreshes immediately. A successful background snapshot becomes stale after 45 seconds without another sample, disabling actions; a failed probe disables actions immediately. Monitoring continues and a successful sample restores availability. Known sends keep three-second checks through completion, preserving the existing result-notification window.
+
+Peer discovery remains its existing five-second check only while files are selected in an active session. No status work was moved into that timer, another daemon or a service; quiet background receiving with no selection runs only the 30-second status checks.
+
+## Measured process activity — first review
 
 Measured on the development host on 2026-10-10 with `tests/polling_benchmark.py`. Both idle runs lasted 300 actual seconds after excluding the initial status. The baseline source was commit `ac6da9c` (same controller as the reviewed `1f43172`). The new run used the corrected controller copied into a frozen test tree.
 
@@ -37,7 +51,7 @@ The actual Quickshell controller launches the actual Python adapter with isolate
 
 Process creation fell **95%**. Total fixture CPU time fell about **86%**; memory remained approximately unchanged. The two timestamp changes after the fix came from requesting/completing the slow status check, not one-second ticks. CPU values are fixture measurements, not a laptop battery-life estimate or live Omdrop benchmark.
 
-Additional measured runs: an open/Off popout made 3 status calls and 9 child launches in 45 seconds (about 15 seconds apart); receiving made 5 status calls and 15 child launches in 15 seconds (about 3 seconds apart). Initial/opening checks are excluded from those windows. Temporary cleanup and operation deadlines remain backend-owned.
+Additional first-review runs: an open/Off popout made 3 status calls and 9 child launches in 45 seconds (about 15 seconds apart); receiving at that revision made 5 status calls and 15 child launches in 15 seconds (about 3 seconds apart). The second-review change below supersedes that closed-receiving rate. Initial/opening checks are excluded from those windows. Temporary cleanup and operation deadlines remain backend-owned.
 
 Reproduce with an installed Qt/DMS test runtime:
 
@@ -45,8 +59,31 @@ Reproduce with an installed Qt/DMS test runtime:
 python3 tests/polling_benchmark.py --source ../baseline-checkout --output .qa/before.json
 python3 tests/polling_benchmark.py --output .qa/after.json
 python3 tests/polling_benchmark.py --mode open --seconds 45 --output .qa/open.json
-python3 tests/polling_benchmark.py --mode receiving --seconds 15 --output .qa/receiving.json
 ```
+
+## Measured process activity — second review
+
+The background-receiving comparison uses the same real controller/adapter fixture on 2026-10-10, with no popout, selected files, owned discovery session or pending operation. Both measurement windows last **300 real seconds**, excluding one initial status call. The baseline is the second review's `9aeec67`; the corrected run uses a frozen copy of the new controller. Status launches real child executables that return fixture data, never host radio/systemd commands.
+
+| Five-minute closed/receiving run | Before (3 seconds) | After (30 seconds) |
+| --- | ---: | ---: |
+| Backend status invocations | 100 | 10 |
+| Child processes spawned by those calls | 300 | 30 |
+| Combined adapter + child processes | 400 | 40 |
+
+This is **90% fewer process launches**, with ongoing reconciliation and a locally ticking countdown. Counts cover the adapter and its three direct fixture children; they do not estimate subprocesses inside a real Omdrop installation or an owned session's additional fingerprint checks. The earlier closed/Off reduction remains 95%. Neither figure is a battery-life claim.
+
+Reproduce from the corrected checkout (the archive is a private baseline fixture):
+
+```sh
+mkdir -p .qa/receiving-baseline
+git archive 9aeec67 | tar -x -C .qa/receiving-baseline
+python3 tests/polling_benchmark.py --source .qa/receiving-baseline --mode receiving --seconds 300 --output .qa/receiving-before.json
+python3 tests/polling_benchmark.py --mode receiving --seconds 300 --output .qa/receiving-after.json
+python3 tests/run_checks.py
+```
+
+Full local validation passed: 102 Python tests (including existing backend expiry, cleanup-lock, long-transfer and ownership preservation cases), all QML syntax/behavior checks, 20 monitoring cases, 3 native UI cases, 20 native-picker cycles, 20 KDE-adapter cycles, and controller, marketplace, picker lifecycle, notification, command, widget compilation and preview checks. Public-file auditing also passed. No backend worker, independent timer or transfer implementation was changed.
 
 ## Native UI compatibility
 
@@ -56,7 +93,7 @@ Device row height follows text/icon height plus `Theme.spacingM`; labels are anc
 
 ## Regression scope
 
-`tests/polling_smoke.py` exercises 14 cases: closed idle/hidden construction, open/close/duplicate instances, timed receiving, countdown expiry, closed transfer completion, temporary abandonment, external activation, reload, clock resume/peer expiry, stale recovery, old preference migration, transient receiving-status failures and expired selections with a missing backend, and closed sending failures after a status timeout. Long timer deadlines are asserted, then shortened only inside specific fixtures; the separate five-minute benchmark uses real time and unchanged intervals.
+`tests/polling_smoke.py` exercises 20 cases: closed idle/hidden construction; Off and receiving open/close/duplicate instances; timed/once/forever background receiving; countdown expiry; closed transfer completion; temporary abandonment; external activation; reload; clock resume/peer expiry; stale recovery while Off and receiving; old preference migration; transient receiving-status failures; expired selections with a missing backend; closed sending failures after a status timeout; quiet temporary discovery/leftover session phases; pending work/cleanup priority; and external-send recovery. One case waits for a real 30-second status interval and asserts the clock continues without three-second process launches. Other long timer deadlines are asserted, then shortened only inside specific fixtures; the separate five-minute benchmarks use real time and unchanged intervals.
 
 `tests/ui_smoke.py` uses installed DMS controls with mocked session services: dark/light themes, 100%/150% fonts, 300/380px widths, small viewport/long lists, expanded receiving options, long names, keyboard focus, hover/selection, busy rendering, mouse wheel, high-resolution wheel, synthetic pixel-delta touchpad input and flicking. Its small C++ input injector is test-only and compiled privately; no test binary is distributed. Mock screenshots are private QA artifacts, not marketplace evidence.
 
