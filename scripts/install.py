@@ -142,7 +142,7 @@ def main():
                 print("Frontend installed. Scan for AirDrop in DMS Settings > Plugins, enable it, and add its bar widget.")
                 print("AirDrop radio readiness is separate; review backend warnings above.")
             else:
-                print("Picker plan: " + ("compile and verify locally" if args.picker != "basic" and report["native_ready"] else "use the basic Qt picker recovery option"))
+                print("Picker plan: " + ("compile and verify locally" if args.picker != "basic" and report["native_ready"] else "use the basic Qt picker automatically when no enhanced helper is available"))
         elif args.action == "uninstall":
             uninstall(SOURCE, config / "DankMaterialShell/plugins", args.apply)
         else:

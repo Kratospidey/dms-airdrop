@@ -50,6 +50,7 @@ tests/native_picker.py
 tests/native_selection.cpp
 tests/notification_smoke.py
 tests/picker_lifecycle.py
+tests/picker_choice_smoke.py
 tests/polling_benchmark.py
 tests/polling_smoke.py
 tests/preview.py

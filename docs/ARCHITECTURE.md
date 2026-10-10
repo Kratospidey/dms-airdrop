@@ -183,6 +183,21 @@ are written to job summaries, preferences or session ownership records.
 launch watchdog, deferred disposal and centralized accept/cancel/failure cleanup.
 It belongs to the shared controller, never a popout or monitor widget.
 
+On a new selection, `QtCore.StandardPaths.findExecutable` checks the absolute
+helper path inside Qt; no probe subprocess, background timer or cached result
+is involved. The DMS `filePicker` preference defaults to Auto. Auto and KDE use
+the enhanced helper when executable; absence selects Basic before launch.
+Basic forces the standard dialog. Preferences use DMS's existing
+`SelectionSetting`/`loadPluginData` storage and survive controller/shell restarts.
+A helper installed later is available on the next selection without a reload.
+
+The coordinator accepts native session properties and one optional fallback
+component. Enhanced failures invalidate the old token and defer disposal before
+launching Basic once. Recovery remains active to deduplicate rapid clicks;
+cancel/destruction invalidates queued recovery, and stale callbacks cannot close
+a replacement. If Basic fails, normal error/retry UI applies without recursion.
+Transient fallback does not persist a preference or suppress later native use.
+
 `workflow/KdePickerSession.qml` owns a short-lived native Qt Widgets process.
 `native/picker.cpp` embeds KDE KFileWidget, with icon view and inline previews
 enabled. KDE owns directory browsing, sorting, zoom, thumbnail generation and
@@ -197,7 +212,8 @@ recent-path and thumbnail-cache writes in a private temporary runtime folder;
 normal exit removes it. A SIGKILL can leave that folder until logout. The QML
 watchdog and destruction callbacks allow immediate retry after failure.
 
-The tested independent Qt Quick dialog remains as a basic recovery option.
+The tested independent Qt Quick dialog is the default on clean source installs
+and the recovery option for failed enhanced sessions.
 Session and popout component URLs are cache-busted when their owner is
 recreated. The native session and state helper use a fresh workflow module to
 avoid an already-cached implicit-module inventory. The widget Loader forwards

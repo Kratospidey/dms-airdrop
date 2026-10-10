@@ -58,6 +58,7 @@ ShellRoot {
         id: test
         property int stage: 0
         property int ticks: 0
+        property double pickerRequestedAt: 0
         function check(ok, message) {
             if (!ok) { console.error("MARKETPLACE_FAIL", message); Qt.quit(); throw new Error(message); }
         }
@@ -78,11 +79,9 @@ ShellRoot {
                     test.check(!labels.includes("Ready to send or receive"), "unavailable backend advertised ready");
                     c.receive("1m"); c.send(); c.stop();
                     test.check(!c.pending, "blocked backend accepted an operation");
-                    c.pickFiles(); test.stage = 1;
-                } else if (test.stage === 1 && !c.pickerActive && c.error.includes("picker")) {
-                    test.check(!c.basicPicker, "native path was not attempted");
-                    c.useBasicPicker(); test.stage = 2;
-                } else if (test.stage === 2 && c.picker?.dialog.visible) {
+                    test.pickerRequestedAt=Date.now();c.pickFiles();test.check(c.basicPicker,"missing helper did not choose Basic before launch");test.stage = 1;
+                } else if (test.stage === 1 && c.picker?.dialog.visible) {
+                    test.check(Date.now()-test.pickerRequestedAt<2000 && !c.error,"fresh installation delayed or reported a picker error");
                     c.picker.complete("accepted", [__SELECTED__], ""); test.stage = 3;
                 } else if (test.stage === 3 && !c.selecting && c.selectedFiles.length === 1) {
                     test.check(!c.canAct && !c.canSend && !c.pending && !c.active, "selection started a missing backend");
@@ -92,7 +91,7 @@ ShellRoot {
                     c.cancelPicker(); test.stage = 5;
                 } else if (test.stage === 5 && !c.pickerActive) {
                     test.check(c.selectedFiles.length === 0, "cancel retained selection");
-                    console.warn("MARKETPLACE_OK: fresh source root, missing backend blocks operations, missing native picker recovers to basic selection/cancel/reopen");
+                    console.warn("MARKETPLACE_OK: fresh source root, first-click Basic without helper/error/delay, missing backend guards, Unicode selection/cancel/reopen");
                     Qt.quit();
                 }
             }

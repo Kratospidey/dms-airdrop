@@ -30,7 +30,11 @@ After acceptance, install AirDrop through DMS Settings → Plugins → Browse, e
 
 ## Basic picker on a fresh registry clone
 
-No compiled helper is distributed. On the first **Send Files** attempt without a native helper, the native launch fails or reaches its six-second launch watchdog; the popout shows a recoverable picker error. Choose **Use basic file picker**. The basic picker opens a separate Qt file dialog and supports local multi-selection, cancellation and reopening. This choice lasts for the controller's lifetime; after a plugin reload, the native picker is tried again. The fallback does not promise thumbnails.
+No compiled helper is distributed. The first **Send Files** click checks the helper's executable availability inside Qt. If absent or non-executable, the basic picker opens directly: no failed native launch, watchdog delay, error or manual recovery step. It supports local multi-selection, Unicode filenames, cancellation and reopening, but does not promise thumbnails.
+
+The **File picker** setting uses DMS's persistent plugin settings: **Auto (recommended)**, **KDE enhanced picker**, or **Basic picker**. Auto and KDE prefer the optional enhanced helper when executable; Basic always opens the standard dialog. Both enhanced choices fall back safely if the helper is unavailable or fails. A fresh controller reads the saved choice; capability failures never overwrite it. **Use basic file picker**, when shown after an actual dialog failure, retries Basic for that selection without changing the saved preference.
+
+Availability is checked only when starting a new selection, without a subprocess, background timer or cached failure preference. Repeated clicks focus the existing dialog. If a launched enhanced picker crashes or times out, its session is disposed before one automatic Basic attempt. Cancellation cancels pending recovery too, and a Basic failure reports an error without another automatic attempt.
 
 The popout provides a **Setup guide** button when the backend or picker is unavailable. No compiler, package manager or privileged command is launched by choosing the fallback.
 
@@ -44,11 +48,11 @@ cd "${XDG_CONFIG_HOME:-$HOME/.config}/DankMaterialShell/plugins/dmsAirDrop"
 python3 scripts/build-picker.py
 ```
 
-`check` only reports prerequisites (with temporary dependency-probe files). The build command explicitly compiles `.build/picker/dms-airdrop-picker` inside this installed clone and performs an offscreen loader check. It does not start discovery or alter the radio. Reload only the AirDrop plugin when idle if the basic picker was already selected, so the controller tries the new helper.
+`check` only reports prerequisites (with temporary dependency-probe files). The build command explicitly compiles `.build/picker/dms-airdrop-picker` inside this installed clone and performs an offscreen loader check. It does not start discovery or alter the radio. In Auto or KDE mode, close any existing chooser and click **Send Files** again to use the new helper; no plugin/DMS reload is needed. If you explicitly saved Basic, select Auto or KDE in settings first.
 
 Do **not** run `./install.sh --apply` inside a registry-managed clone: that command is for creating the separate manual symlink installation and intentionally refuses to overwrite DMS's actual directory. `./install.sh check` and `scripts/build-picker.py` are safe to reuse as documented.
 
-The helper can need rebuilding after Qt/KDE changes or if a DMS update replaces the checkout. A missing helper always retains the same explicit basic-picker recovery path.
+The helper can need rebuilding after Qt/KDE changes or if a DMS update replaces the checkout. A missing helper automatically selects Basic; a failed enhanced launch recovers once to Basic.
 
 ## Missing Omdrop or radio backend
 
@@ -64,6 +68,6 @@ The manual installer's uninstall command removes only its own symlink and intent
 
 ## Verification scope
 
-The marketplace fixture copies the audited repository files into an isolated XDG plugin directory, without running the installer or building a helper. It loads the actual popout/controller using installed DMS components with mock session services, injects a nonexistent backend, checks mutation guards and setup text, then exercises missing-native failure followed by basic-picker selection/cancel/reopen. A separate public clone check verifies manifest paths and executable modes.
+The marketplace fixture copies the audited repository files into an isolated XDG plugin directory, without running the installer or building a helper. It loads the actual popout/controller using installed DMS components with mock session services, injects a nonexistent backend, checks mutation guards and setup text, then verifies first-click Basic opens within two seconds without a picker error, followed by selection/cancel/reopen. Separate capability/recovery tests cover executable permissions, later installation, enhanced crashes, bounded recovery and disk-backed preference fixtures across fresh Quickshell processes. Actual KDE widgets and both picker lifecycle implementations have their own offscreen tests. A separate public clone check verifies manifest paths and executable modes.
 
 This tests frontend behavior on the development host. It does not reproduce a new user's complete OS, certify new hardware or run a live AirDrop transfer. Prior transfer evidence and exact tested versions are in [Compatibility](COMPATIBILITY.md).

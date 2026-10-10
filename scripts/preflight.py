@@ -92,7 +92,7 @@ def check(root, native=True):
     if native:
         report["native_ready"], report["native"] = native_probe(root)
     if not report["native_ready"]:
-        report["warnings"].append("Native thumbnails unavailable unless a working helper already exists. Choose 'Use basic file picker' if Send Files reports a picker error.")
+        report["warnings"].append("Native thumbnails unavailable unless a working helper already exists. Send Files automatically uses the basic Qt picker when the helper is unavailable.")
     report["backend"]["omdrop"] = find_omdrop()
     path = report["backend"]["omdrop"]
     rc, out = run([path, "version"])

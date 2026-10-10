@@ -34,7 +34,7 @@ On another distribution, use its documentation to find Qt 6 Widgets/Quick/Dialog
 ./install.sh --apply
 ```
 
-It builds the native picker when dependencies are present. If dependencies are missing, it reports the basic picker recovery path. To deliberately skip building:
+It builds the optional native picker when dependencies are present. If dependencies are missing, file selection uses the basic picker automatically. To deliberately skip building:
 
 ```sh
 ./install.sh --apply --picker basic
@@ -42,7 +42,7 @@ It builds the native picker when dependencies are present. If dependencies are m
 
 In DMS Settings → Plugins, scan and enable AirDrop, then add the widget to the bar. Keep the source directory where it is: the plugin is a symlink to it. You can safely repeat the install command for this same clone.
 
-If Send Files cannot start the KDE helper, choose **Use basic file picker** in the popout. This fallback supports local selection; it is not advertised as a thumbnail browser. Install the native dependencies and run `python3 scripts/build-picker.py` later for the KDE picker.
+**Send Files** opens Basic directly when the KDE helper is missing or not executable. Basic supports local multi-selection but does not promise thumbnails. Install the native dependencies and run `python3 scripts/build-picker.py` later; Auto mode detects the helper on the next selection without reloading DMS. The plugin's **File picker** setting can persistently select Basic or prefer KDE. An unexpected enhanced-picker failure automatically recovers once to Basic.
 
 ## 4. Configure AirDrop separately
 

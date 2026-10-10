@@ -1,4 +1,5 @@
 import QtQuick
+import QtCore
 import Quickshell
 import Quickshell.Io
 import qs.Services
@@ -53,6 +54,8 @@ Item {
     property string cleanupToken: ""
     property bool basicPicker: false
     property string pickerComponentUrl: "workflow/KdePickerSession.qml"
+    property string nativePickerExecutable: decodeURIComponent(Qt.resolvedUrl(".build/picker/dms-airdrop-picker").toString().substring(7))
+    readonly property string pickerPreference: pref("filePicker", "auto")
     readonly property var sendSession: snapshot.session || ({})
     readonly property bool temporarySession: sendSession.owned === true
     readonly property string sessionMessage: active ? sendSession.message || "" : ""
@@ -185,13 +188,18 @@ Item {
         lastNames = Date.now();
         act("names");
     }
-    function pickFiles() {
+    function pickFiles(forceBasic = false) {
         if (!canPickFiles) { error = "Wait for the current operation before changing files."; return; }
+        if (filePicker.active) { filePicker.open(); return; }
         error = "";
+        // A synchronous Qt filesystem check, only on a new selection request.
+        // Do not cache absence: a helper built later must work on the next click.
+        basicPicker = forceBasic === true || pickerPreference === "basic"
+            || StandardPaths.findExecutable(nativePickerExecutable).toString() === "";
         if (filePicker.sessionComponent.status === Component.Error) console.warn("AirDrop picker:", filePicker.sessionComponent.errorString());
         filePicker.open();
     }
-    function useBasicPicker() { basicPicker = true; pickFiles(); }
+    function useBasicPicker() { pickFiles(true); }
     function cancelPicker() { filePicker.cancel(); }
     function startDiscovery() {
         if (!selectedFiles.length) return;
@@ -220,6 +228,8 @@ Item {
         // DMS only cache-busts its entrypoint on plugin reload. Give each
         // controller's short-lived picker windows a fresh component too.
         sessionComponent: Qt.createComponent(Qt.resolvedUrl(root.basicPicker ? "picker/FilePickerSession.qml" : root.pickerComponentUrl).toString() + "?v=" + Date.now())
+        sessionProperties: root.basicPicker ? ({}) : ({executable: root.nativePickerExecutable})
+        fallbackComponent: root.basicPicker ? null : basicPickerComponent
         onFailed: message => root.error = message
         onSelected: paths => {
             if (root.busy) { root.error = "AirDrop became busy. Choose files again when the operation finishes."; return; }
@@ -228,6 +238,7 @@ Item {
             selectionCommand.start(root.args("inspect-files").concat([JSON.stringify(paths)]));
         }
     }
+    Component { id: basicPickerComponent; FilePickerSession {} }
     Command {
         id: selectionCommand
         onCompleted: result => {

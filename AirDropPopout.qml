@@ -234,7 +234,7 @@ PopoutComponent {
             }
             DetailText {
                 visible: root.ready && controller.error.indexOf("picker") >= 0 && !controller.pickerActive
-                text: "The optional KDE picker is unavailable. Use the basic picker, or open the setup guide to enable thumbnails."
+                text: "The file picker could not complete. Try the basic picker again, or open the setup guide."
             }
             DetailText {
                 visible: !root.ready || !controller.active || controller.peerMessage !== "" || (!controller.peers.length && !controller.scanning)

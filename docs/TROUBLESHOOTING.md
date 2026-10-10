@@ -10,8 +10,9 @@ Start with `./install.sh check`. It is read-only and never starts AirDrop. Keep 
 | Backend missing | Configure Omdrop 0.14.1 separately. Its executable is discovered first in `~/.local/bin`, then PATH. No setup runs automatically. |
 | Unsupported version or preservation error | Keep the audited CLI version and upstream layout. Compare your receiver setup against upstream yourself; don't bypass guards or overwrite a working service. |
 | Radio helper missing | Review the correct hardware backend's upstream instructions; frontend installation is not a driver installation. |
-| Native picker build fails | Run `python3 scripts/build-picker.py` for CMake/compiler diagnostics. Install the appropriate Qt6/KF6 development packages, or install with `--picker basic` and use the UI's basic recovery option. |
-| Helper stopped loading after Qt/KDE upgrade | Rebuild locally. Release binaries are not distributed. |
+| Native picker build fails | Basic works immediately without the helper. Build later with `python3 scripts/build-picker.py` after installing Qt6/KF6 development packages. Auto detects the new executable on the next selection. |
+| Helper stopped loading after Qt/KDE upgrade | A failed enhanced session recovers once to Basic. Rebuild locally, or save Basic under File picker settings. Release binaries are not distributed. |
+| Basic picker also fails | Use the basic-picker retry button after checking the Qt/Quickshell runtime. Recovery is bounded; it never launches an automatic retry loop. |
 | No thumbnails | Confirm native helper is used, increase icon size if needed, and check KIO thumbnail plugins for the file type (e.g. kio-extras). The basic fallback does not promise previews. |
 | No nearby devices | Open AirDrop/share sheet on the recipient, confirm its visibility, move closer, refresh. Use name lookup explicitly; unnamed peers can still appear. |
 | Channel error | OWL shared mode needs channel 6, 44 or 149. Read upstream guidance and decide on network changes yourself; the installer does not change channels. |

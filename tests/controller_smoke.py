@@ -34,8 +34,8 @@ ShellRoot {
         property int stage: 0
         property int ticks: 0
         function fail(message) { console.warn("SMOKE_FAIL: " + message); Qt.quit(); }
-        Component { id: factory; Plugin.AirDropController { pluginService: PluginService; basicPicker: true; helper: "''' + str(fixture.wrapper) + '''" } }
-        Component.onCompleted: instance = factory.createObject(owner)
+        Component { id: factory; Plugin.AirDropController { pluginService: PluginService; helper: "''' + str(fixture.wrapper) + '''" } }
+        Component.onCompleted: { PluginService.savePluginData("dmsAirDrop", "filePicker", "basic"); instance = factory.createObject(owner); }
         Timer {
             interval: 100; running: true; repeat: true
             onTriggered: {

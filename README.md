@@ -12,7 +12,7 @@ Send files to compatible Apple devices, receive files from them, and manage disc
 
 - DMS bar widget, popout and settings, with one shared controller across monitors.
 - Send one or more local files to nearby Apple devices; receive into your existing Omdrop folder.
-- Native KDE file browsing, zoom and available thumbnails; basic Qt picker recovery option.
+- Basic file selection immediately after installation; optional KDE browsing, zoom and thumbnails selected automatically when available.
 - Automatic discovery after file selection, timed receiving and Receive Once.
 - Temporary sending sessions with ownership checks before cleanup.
 - Asynchronous transfers that survive closing the popout or reloading the plugin.
@@ -36,7 +36,7 @@ Authentic screenshot of the installed plugin, cropped to its popout. The golden 
 | Native picker | CMake ≥3.20, C++17 compiler, Make, Qt 6 Widgets development files, KF6 KIO and IconThemes ≥6.0 |
 | Picker extras | Breeze style/icons; KIO thumbnail plugins such as kio-extras for more file types |
 
-The CMake declarations describe build requirements, not a tested range of every Qt/KDE release. The native picker was built with Qt 6.11.2 and KDE Frameworks 6.30.0. With no native helper, the existing basic Qt picker is available via **Use basic file picker** after a picker failure; thumbnails are not promised in that fallback.
+The CMake declarations describe build requirements, not a tested range of every Qt/KDE release. The native picker was built with Qt 6.11.2 and KDE Frameworks 6.30.0. Without an executable native helper, **Send Files** opens the basic Qt picker immediately. Auto mode detects a helper built later on the next selection. DMS's **File picker** setting saves Auto, KDE enhanced or Basic across restarts; both Auto and KDE recover to Basic if needed. Basic supports multi-selection but does not promise thumbnails.
 
 ## Install
 
@@ -65,7 +65,7 @@ Useful commands:
 ./install.sh check                      # read-only prerequisite report
 ./install.sh --picker native            # require native prerequisites, dry run
 ./install.sh --apply --picker native    # require a successful local native build
-./install.sh --apply --picker basic     # skip the build; use basic picker recovery
+./install.sh --apply --picker basic     # skip the optional native build
 python3 scripts/build-picker.py         # build/rebuild only the local helper
 ```
 
@@ -75,7 +75,7 @@ For Arch/CachyOS package names and release archive installation, see [Friend set
 
 ### DMS marketplace installation
 
-**Submitted for review in [registry PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029)**; marketplace acceptance is pending. See [submission status](docs/REGISTRY_READINESS.md). DMS clones the frontend directly and does not run this installer, install backend packages or compile the optional KDE helper. A fresh clone can recover from a missing native picker using **Use basic file picker**. Follow [marketplace setup](docs/MARKETPLACE.md) for the exact fallback/build/update/removal steps.
+**Submitted for review in [registry PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029)**; marketplace acceptance is pending. See [submission status](docs/REGISTRY_READINESS.md). DMS clones the frontend directly and does not run this installer, install backend packages or compile the optional KDE helper. A fresh clone opens the basic picker on the first **Send Files** click. Follow [marketplace setup](docs/MARKETPLACE.md) for optional KDE enhancement and update/removal steps.
 
 ## First-time backend setup
 

@@ -14,6 +14,13 @@ PluginSettings {
         text: "AirDrop uses your existing Omdrop installation. Enable the plugin to read its current configuration. Device settings can be changed only while AirDrop is off."
     }
     SelectionSetting {
+        settingKey: "filePicker"
+        label: "File picker"
+        description: "Auto prefers the KDE thumbnail picker when available. Auto and KDE use Basic if the enhanced picker is unavailable or fails. Basic always uses the standard dialog."
+        defaultValue: "auto"
+        options: [{label: "Auto (recommended)", value: "auto"}, {label: "KDE enhanced picker", value: "kde"}, {label: "Basic picker", value: "basic"}]
+    }
+    SelectionSetting {
         settingKey: "duration"
         label: "Default receiving window"
         defaultValue: "10m"
