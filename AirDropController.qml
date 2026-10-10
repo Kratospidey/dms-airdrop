@@ -28,6 +28,17 @@ Item {
     property double sampledAt: 0
     property double peersAt: 0
     property double now: Date.now()
+    property var visiblePopouts: []
+    property bool openingRefresh: false
+    property bool lastKnownActive: false
+    property bool lastKnownBusy: false
+    readonly property bool popoutVisible: visiblePopouts.length > 0
+    readonly property int openInterval: Math.max(10, Math.min(60, Number(pref("openInterval", 15)) || 15)) * 1000
+    readonly property int pollInterval: busy || lastKnownBusy || active || lastKnownActive || temporarySession || prepareRequested || cleanupRequested ? 3000 : popoutVisible ? openInterval : 300000
+    readonly property int freshnessLimit: Math.max(30000, pollInterval + 15000)
+    readonly property bool clockNeeded: active || busy || temporarySession || selectedFiles.length > 0 || (popoutVisible && peersAt > 0 && now - peersAt < 15000)
+    readonly property bool clockRunning: clockTimer.running
+    readonly property bool checking: statusCommand.busy
     property int generation: 0
     property int statusGeneration: 0
     property int peerGeneration: 0
@@ -57,7 +68,7 @@ Item {
     property string selectionSize: ""
     readonly property string selectionSummary: Selection.summary(selectedFiles, selectionSize)
     property string helper: decodeURIComponent(Qt.resolvedUrl("scripts/backend.py").toString().substring(7))
-    readonly property bool stale: sampledAt === 0 || now - sampledAt > Math.max(30000, Number(pref("idleInterval", 15)) * 2000)
+    readonly property bool stale: openingRefresh || sampledAt === 0 || now - sampledAt >= freshnessLimit
     readonly property string state: State.state(snapshot, pending, stale)
     readonly property string statusLabel: State.label(state)
     readonly property string timeLabel: stale ? "" : State.remaining(backend, sampledAt, now)
@@ -74,13 +85,42 @@ Item {
         return pluginService ? pluginService.loadPluginData(pluginId, key, fallback) : fallback;
     }
     function args(command) { return ["python3", helper, command]; }
+    function syncClock() {
+        now = Date.now();
+        if (peersAt && now - peersAt >= 15000) selectedPeer = "";
+    }
+    function setPopoutVisible(owner, opened) {
+        const others = visiblePopouts.filter(item => item && item !== owner);
+        visiblePopouts = opened ? others.concat([owner]) : others;
+    }
+    onPopoutVisibleChanged: {
+        syncClock();
+        if (popoutVisible) {
+            openingRefresh = true;
+            refresh();
+        }
+    }
+    onClockNeededChanged: { if (clockNeeded) syncClock(); }
+    function armFreshness() {
+        freshnessDeadline.stop();
+        if (sampledAt === 0 || openingRefresh) return;
+        const remaining = sampledAt + freshnessLimit - Date.now();
+        if (remaining <= 0) { syncClock(); return; }
+        freshnessDeadline.interval = remaining;
+        freshnessDeadline.start();
+    }
+    onSampledAtChanged: armFreshness()
+    onFreshnessLimitChanged: armFreshness()
+    onOpeningRefreshChanged: armFreshness()
     function refresh() {
+        syncClock();
         if (statusCommand.busy) return;
         statusGeneration = generation;
         statusCommand.start(args("status"));
     }
     function act(action, values) {
-        if (!canAct) return;
+        syncClock();
+        if (!canAct) { if (stale) refresh(); return; }
         error = "";
         pending = action;
         pendingId = "";
@@ -151,6 +191,8 @@ Item {
     function startDiscovery() {
         if (!selectedFiles.length) return;
         prepareRequested = true;
+        syncClock();
+        if (stale) refresh();
         continueWorkflow();
     }
     function continueWorkflow() {
@@ -198,6 +240,7 @@ Item {
         }
     }
     function clearSelection(cleanup = true) {
+        const needsCleanup = temporarySession || pending === "prepare-send" || autoDiscover;
         selectionRevision++;
         selectedFiles = [];
         selectionSize = "";
@@ -205,7 +248,7 @@ Item {
         selectionExpiry.stop();
         prepareRequested = false;
         autoDiscover = false;
-        if (cleanup) {
+        if (cleanup && needsCleanup) {
             cleanupRequested = true;
             cleanupToken = sendSession.token || "";
             Qt.callLater(continueWorkflow);
@@ -245,19 +288,27 @@ Item {
         }
     }
     Timer {
-        interval: root.busy || root.active ? 3000 : Math.max(10, Math.min(60, Number(root.pref("idleInterval", 15)))) * 1000
+        objectName: "statusPoll"
+        interval: root.pollInterval
         running: true
         repeat: true
         onTriggered: root.refresh()
     }
     Timer {
+        id: clockTimer
         interval: 1000
-        running: true
+        running: root.clockNeeded
         repeat: true
         onTriggered: {
-            root.now = Date.now();
-            if (root.peersAt && root.now - root.peersAt >= 15000) root.selectedPeer = "";
+            root.syncClock();
         }
+    }
+    // One deadline wakeup invalidates a sample if reconciliation stalls.
+    // Static idle UI needs neither a ticking clock nor another polling loop.
+    Timer {
+        id: freshnessDeadline
+        objectName: "freshnessDeadline"
+        onTriggered: { root.syncClock(); root.armFreshness(); }
     }
     Timer {
         interval: 5000
@@ -265,7 +316,7 @@ Item {
         repeat: true
         onTriggered: root.discover()
     }
-    Timer { id: selectionExpiry; interval: 300000; onTriggered: { root.error = "File selection expired. Choose files again when you are ready."; root.clearSelection(); } }
+    Timer { id: selectionExpiry; objectName: "selectionExpiry"; interval: 300000; onTriggered: { root.error = "File selection expired. Choose files again when you are ready."; root.clearSelection(); } }
 
     // Scope the native toast timer to our own category. Other notifications,
     // warnings and errors retain DMS's normal timing and queue behavior.
@@ -305,13 +356,17 @@ Item {
             if (root.statusGeneration !== root.generation) { Qt.callLater(root.refresh); return; }
             const initialSnapshot = !root.hadSnapshot;
             root.hadSnapshot = true;
-            root.now = Date.now();
+            root.syncClock();
             root.snapshot = result;
+            root.openingRefresh = false;
+            if (result.ok || (typeof result.busy === "boolean" && typeof result.external_send === "boolean"))
+                root.lastKnownBusy = result.busy === true || result.external_send === true;
             if (initialSnapshot && result.session?.owned && result.session.phase === "discovering" && !result.busy) {
                 root.cleanupRequested = true;
                 root.cleanupToken = result.session.token;
             }
             if (result.ok) {
+                root.lastKnownActive = result.status.receiving || result.status.visible;
                 root.sampledAt = Date.now();
                 const receiving = result.status.receiving;
                 if (root.hadStatus && root.wasReceiving && !receiving && !root.pending && result.status.mode === "off" && root.pref("notifyExpiry", false))

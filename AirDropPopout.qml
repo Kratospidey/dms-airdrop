@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import qs.Common
 import qs.Widgets
 import qs.Modules.Plugins
@@ -12,21 +11,32 @@ PopoutComponent {
     property string duration: controller ? controller.pref("duration", "10m") : "10m"
     property bool customDuration: false
     property bool receiveOptions: false
+    readonly property bool stackActions: width - Theme.spacingS * 2 < Theme.fontSizeMedium * 23 + Theme.spacingL * 2
     readonly property bool ready: controller !== null && controller !== undefined
+    readonly property bool popoutOpen: visible && parentPopout !== null && parentPopout.shouldBeVisible === true
+    property var observedController: null
+    function syncVisibility() {
+        if (observedController && observedController !== controller)
+            observedController.setPopoutVisible(root, false);
+        observedController = controller && typeof controller.setPopoutVisible === "function" ? controller : null;
+        if (observedController) observedController.setPopoutVisible(root, popoutOpen);
+    }
+    onPopoutOpenChanged: syncVisibility()
+    onControllerChanged: syncVisibility()
     headerText: "AirDrop"
     detailsText: "Share files with nearby Apple devices"
     showCloseButton: true
-    Component.onCompleted: { if (ready) controller.refresh(); }
+    Component.onCompleted: syncVisibility()
+    Component.onDestruction: { if (observedController) observedController.setPopoutVisible(root, false); }
 
-    Flickable {
+    DankFlickable {
         id: scroll
+        objectName: "airDropScroll"
         width: parent.width
-        height: Math.min(body.implicitHeight + Theme.spacingM, Math.max(160, root.availableHeight - root.headerHeight - root.detailsHeight))
+        height: Math.min(body.implicitHeight + Theme.spacingM, Math.max(Theme.iconSizeLarge, root.availableHeight - root.headerHeight - root.detailsHeight))
         contentWidth: width
         contentHeight: body.implicitHeight + Theme.spacingM
         clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        ScrollBar.vertical: ScrollBar {}
         Column {
             id: body
             width: parent.width - Theme.spacingS * 2
@@ -45,13 +55,14 @@ PopoutComponent {
                     width: parent.width - Theme.spacingM * 2
                     spacing: Theme.spacingM
                     DankIcon {
+                        id: statusIcon
                         name: root.ready && controller.active ? "wifi_tethering" : "wifi_tethering"
-                        size: 32
+                        size: Theme.iconSizeLarge
                         color: root.ready && controller.active ? Theme.primary : Theme.surfaceVariantText
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Column {
-                        width: parent.width - 48
+                        width: parent.width - statusIcon.width - parent.spacing
                         StyledText {
                             text: root.ready ? controller.statusLabel : "Checking AirDrop status"
                             width: parent.width
@@ -81,18 +92,18 @@ PopoutComponent {
                 iconName: "help_outline"
                 onClicked: Qt.openUrlExternally("https://github.com/Kratospidey/dms-airdrop/blob/main/docs/MARKETPLACE.md")
             }
-            Row {
+            Flow {
                 width: parent.width
                 spacing: Theme.spacingS
                 DankButton {
-                    width: (parent.width - parent.spacing) / 2
+                    width: root.stackActions ? parent.width : (parent.width - parent.spacing) / 2
                     text: controller?.pickerState === "opening" ? "Opening picker…" : controller?.pickerActive ? "Show file picker" : controller?.selecting ? "Checking files…" : controller?.selectedFiles.length > 0 ? "Change Files" : "Send Files"
                     iconName: "upload"
                     enabled: root.ready && controller.canPickFiles
                     onClicked: controller.pickFiles()
                 }
                 DankButton {
-                    width: (parent.width - parent.spacing) / 2
+                    width: root.stackActions ? parent.width : (parent.width - parent.spacing) / 2
                     text: root.ready && controller.active ? "Turn Off" : "Receive Files"
                     iconName: root.ready && controller.active ? "stop" : "download"
                     enabled: root.ready && controller.canAct
@@ -119,18 +130,18 @@ PopoutComponent {
                 visible: root.ready && controller.state === "SENDING"
                 text: controller.snapshot.external_send && !controller.snapshot.busy ? "A transfer started outside this plugin is running. Stop is unavailable until it finishes." : "You can close this popout. The transfer will continue."
             }
-            Row {
+            Flow {
                 width: parent.width
                 spacing: Theme.spacingS
                 DankButton {
-                    width: (parent.width - parent.spacing) / 2
+                    width: root.stackActions ? parent.width : (parent.width - parent.spacing) / 2
                     text: "Receiving options"
                     backgroundColor: Theme.surfaceContainerHigh
                     textColor: Theme.surfaceText
                     onClicked: root.receiveOptions = !root.receiveOptions
                 }
                 DankButton {
-                    width: (parent.width - parent.spacing) / 2
+                    width: root.stackActions ? parent.width : (parent.width - parent.spacing) / 2
                     text: "Downloads"
                     iconName: "folder_open"
                     backgroundColor: Theme.surfaceContainerHigh
@@ -139,10 +150,15 @@ PopoutComponent {
                     onClicked: controller.openDownloads()
                 }
             }
+            DetailText {
+                visible: root.receiveOptions && root.stackActions
+                text: "Receiving window"
+            }
             DankDropdown {
                 visible: root.receiveOptions
                 width: parent.width
-                text: "Receiving window"
+                text: root.stackActions ? "" : "Receiving window"
+                dropdownWidth: root.stackActions ? width : Theme.iconSize * 8 + Theme.spacingS
                 options: ["10 minutes", "Receive once", "30 minutes", "Custom duration"]
                 currentValue: root.customDuration ? "Custom duration" : root.duration === "once" ? "Receive once" : root.duration === "30m" ? "30 minutes" : "10 minutes"
                 enabled: root.ready && controller.canAct
@@ -229,18 +245,18 @@ PopoutComponent {
                 visible: root.ready && controller.scanning
                 text: "Looking for nearby devices…"
             }
-            Row {
+            Flow {
                 spacing: Theme.spacingS
                 width: parent.width
                 DankButton {
-                    width: (parent.width - parent.spacing) / 2
+                    width: root.stackActions ? parent.width : (parent.width - parent.spacing) / 2
                     text: "Refresh"
                     iconName: "refresh"
                     enabled: root.ready && controller.canAct && controller.backend.visible === true && !controller.scanning
                     onClicked: controller.discover()
                 }
                 DankButton {
-                    width: (parent.width - parent.spacing) / 2
+                    width: root.stackActions ? parent.width : (parent.width - parent.spacing) / 2
                     text: "Resolve names"
                     enabled: root.ready && controller.canAct && controller.backend.visible === true && !controller.scanning && controller.now - controller.lastNames >= 30000
                     onClicked: controller.resolveNames()
@@ -264,7 +280,8 @@ PopoutComponent {
                 visible: root.ready && controller.peers.length > 0 && controller.now - controller.peersAt >= 15000
                 text: "This device list is stale. Refresh before selecting a recipient."
             }
-            Row {
+            Flow {
+                width: parent.width
                 visible: root.ready && controller.selectedFiles.length > 0
                 spacing: Theme.spacingS
                 DankButton {
@@ -304,8 +321,8 @@ PopoutComponent {
                     }
                     Rectangle {
                         width: parent.width
-                        height: 3
-                        radius: 2
+                        height: Theme.spacingXS
+                        radius: Math.min(Theme.cornerRadius, height / 2)
                         visible: root.ready && controller.busy
                         color: Theme.surfaceContainerHigh
                         clip: true
@@ -314,7 +331,7 @@ PopoutComponent {
                             height: parent.height
                             color: Theme.primary
                             SequentialAnimation on x {
-                                running: root.ready && controller.busy && root.visible
+                                running: root.ready && controller.busy && root.popoutOpen
                                 loops: Animation.Infinite
                                 NumberAnimation { from: 0; to: transfer.width * 2 / 3; duration: 850; easing.type: Easing.InOutQuad }
                                 NumberAnimation { from: transfer.width * 2 / 3; to: 0; duration: 850; easing.type: Easing.InOutQuad }
@@ -326,7 +343,8 @@ PopoutComponent {
                         text: controller?.job.message || ""
                         color: controller?.job.state === "complete" ? Theme.surfaceText : Theme.error
                     }
-                    Row {
+                    Flow {
+                        width: parent.width
                         visible: root.ready && !controller.busy
                         spacing: Theme.spacingS
                         DankButton {
@@ -342,7 +360,8 @@ PopoutComponent {
                     }
                 }
             }
-            Row {
+            Flow {
+                width: parent.width
                 spacing: Theme.spacingS
                 DankButton { text: "Check status"; enabled: root.ready; onClicked: controller.refresh() }
                 DankButton { text: "Diagnostics"; enabled: root.ready; onClicked: controller.diagnose() }

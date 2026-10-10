@@ -48,3 +48,9 @@ Logs, fixtures, screenshots and rollback manifests stay under ignored .qa. Local
 The immutable release above remains the baseline. Main additionally includes 3 image-audit regression tests (102 Python tests total) and `tests/marketplace_smoke.py`. The latter loads an isolated source-root installation with no installer/native binary and a deliberately nonexistent backend. It checks unavailable/setup UI, blocked send/receive actions, native failure recovery, actual basic Qt selection with Unicode paths, cancellation and reopening. Its wrapper rejects every command except status and local file metadata inspection before calling the adapter.
 
 The authentic screenshot is privacy-reviewed and hash-pinned by the public audit; changed or unreviewed images are rejected. Registry schema/link validation runs using the official registry tools in an isolated virtual environment. These checks add no new live-radio or independent-machine evidence.
+
+## Marketplace review regression checks
+
+The full suite also runs 14 controller-monitoring cases and 3 native UI cases. These cover real popout visibility, duplicate instances, reload, stale/sample deadlines, receiving and closed-popout job completion, selection expiry/cleanup, peer expiry, missing backends, native scrolling and theme-responsive rows. The UI input injector uses the installed C++ compiler, pkg-config and Qt 6 development tools; it only sends synthetic events to the isolated test window.
+
+Two actual five-minute idle runs and shorter open/receiving runs measure adapter and child-process creation. The benchmark is separate from routine CI so it does not add ten minutes to every test run. Reproduction commands, results, native API choices and unverified live scenarios are recorded in [Marketplace review corrections](REVIEW_FIXES.md).

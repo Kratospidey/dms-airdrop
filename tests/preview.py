@@ -61,6 +61,7 @@ Singleton {
     property int spacingL: 16
     property int cornerRadius: 16
     property int iconSize: 24
+    property int iconSizeLarge: 32
     property int fontSizeSmall: 12
     property int fontSizeMedium: 14
     property int fontSizeLarge: 16

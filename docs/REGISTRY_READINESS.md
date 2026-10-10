@@ -11,3 +11,5 @@ A user-supplied authentic screenshot is cropped to the complete AirDrop popout, 
 The submission uses the current [contribution requirements](https://github.com/AvengeMedia/dms-plugin-registry/blob/master/CONTRIBUTING.md), official validators and AI-assistance disclosure. Registry acceptance remains the maintainers' decision. No independent-machine testing is claimed.
 
 Both official validators passed locally, with link validation scoped to the changed entry as in registry CI. An anonymous public clone preserved the root manifest, resources and executable modes; the isolated QML test passed without running the installer or building the native helper. The new full regression run passed 102 Python tests, QML checks and picker/controller smoke tests. See [Testing](TESTING.md) for the scope and the PR's Checks tab for current upstream CI and review status.
+
+The first automated review requested reduced background work and native UI conventions. [Review corrections and measurements](REVIEW_FIXES.md) document the fixes and regression coverage; the PR tracks the current re-review outcome.

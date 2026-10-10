@@ -70,9 +70,25 @@ radio/receiver remaining time is used.
 An in-flight mutation wins over intermediate status. A generation counter
 discards polls and peer lists started before a newly submitted mutation.
 
-Idle polls default to 15 seconds (10–60 configurable), active polls to 3 seconds.
-Only one controller polls, regardless of monitors. Peers are polled every five seconds only while files are selected and a
-session is active. Name resolution remains explicit. The clock only
+Closed, idle popouts reconcile status every five minutes. The first open popout
+refreshes immediately and uses a 15-second interval (10–60 configurable under
+`openInterval`). The former `idleInterval` setting no longer controls background
+activity. Active windows, jobs and temporary-session work retain three-second
+polls, even when every popout is closed. A failed probe after known receiving
+or a job keeps the fast reconciliation cadence until a valid snapshot confirms
+the session/job has ended.
+
+Only one controller polls, regardless of monitors. Each popout registers its
+identity using DMS `parentPopout.shouldBeVisible`, unregistering on close,
+destruction or controller replacement. Component existence alone is not
+visibility. Opening marks the sample as checking until the shared status request
+finishes; overlapping opens share that request. A one-shot freshness deadline
+invalidates a sample if reconciliation stalls, without a permanent idle clock.
+
+The one-second clock runs for active sessions/jobs, selected files or a visible
+unexpired peer list. It synchronizes immediately when resumed or when the
+popout opens. Peers are polled every five seconds only while files are selected
+and a session is active. Name resolution remains explicit. The clock only
 interpolates backend-reported seconds; after zero it says Checking window expiry.
 The countdown never changes backend state. A separate finite backend timer
 handles abandonment of plugin-owned sending sessions. Stale snapshots disable actions.

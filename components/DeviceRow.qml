@@ -8,7 +8,7 @@ Rectangle {
     property bool selected: false
     signal chosen
     width: parent.width
-    height: 58
+    height: Math.max(labels.implicitHeight, deviceIcon.height, selectionIcon.height) + Theme.spacingM * 2
     radius: Theme.cornerRadius
     color: selected ? Theme.withAlpha(Theme.primary, 0.16) : area.containsMouse ? Theme.surfaceContainerHigh : Theme.surfaceContainer
     border.width: selected || activeFocus ? 1 : 0
@@ -22,17 +22,23 @@ Rectangle {
     Keys.onSpacePressed: chosen()
     Keys.onReturnPressed: chosen()
     DankIcon {
+        id: deviceIcon
+        objectName: "deviceIcon"
         anchors.left: parent.left
         anchors.leftMargin: Theme.spacingM
         anchors.verticalCenter: parent.verticalCenter
         name: "devices"
         color: root.selected ? Theme.primary : Theme.surfaceVariantText
-        size: 24
+        size: Theme.iconSize
     }
     Column {
-        x: 52
+        id: labels
+        objectName: "deviceLabels"
+        anchors.left: deviceIcon.right
+        anchors.leftMargin: Theme.spacingM
+        anchors.right: selectionIcon.left
+        anchors.rightMargin: Theme.spacingM
         anchors.verticalCenter: parent.verticalCenter
-        width: parent.width - 92
         StyledText {
             width: parent.width
             text: root.peer.label
@@ -51,12 +57,14 @@ Rectangle {
         }
     }
     DankIcon {
+        id: selectionIcon
+        objectName: "selectionIcon"
         anchors.right: parent.right
         anchors.rightMargin: Theme.spacingM
         anchors.verticalCenter: parent.verticalCenter
         name: root.selected ? "radio_button_checked" : "radio_button_unchecked"
         color: root.selected ? Theme.primary : Theme.surfaceVariantText
-        size: 20
+        size: Theme.iconSize - Theme.spacingXS
     }
     MouseArea {
         id: area

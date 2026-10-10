@@ -59,9 +59,9 @@ PluginSettings {
     ToggleSetting { settingKey: "notifyExpiry"; label: "Notify when the receiving window closes"; defaultValue: false }
     DetailText { text: "Incoming-file notifications are already provided by Omdrop's receiver watcher. The plugin does not duplicate them or watch arbitrary files in Downloads." }
     SelectionSetting {
-        settingKey: "idleInterval"
-        label: "Idle status refresh"
-        description: "Active operations refresh every 3 seconds."
+        settingKey: "openInterval"
+        label: "Open popout status refresh"
+        description: "Opening refreshes immediately. Active sessions refresh every 3 seconds; when closed and idle, status reconciles every 5 minutes."
         defaultValue: "15"
         options: [{label: "10 seconds", value: "10"}, {label: "15 seconds", value: "15"}, {label: "30 seconds", value: "30"}, {label: "60 seconds", value: "60"}]
     }

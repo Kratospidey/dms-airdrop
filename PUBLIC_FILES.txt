@@ -22,6 +22,7 @@ docs/FRIEND_SETUP.md
 docs/MARKETPLACE.md
 docs/REGISTRY_READINESS.md
 docs/RELEASE_0.2.1.md
+docs/REVIEW_FIXES.md
 docs/TESTING.md
 docs/TROUBLESHOOTING.md
 install.sh
@@ -49,6 +50,8 @@ tests/native_picker.py
 tests/native_selection.cpp
 tests/notification_smoke.py
 tests/picker_lifecycle.py
+tests/polling_benchmark.py
+tests/polling_smoke.py
 tests/preview.py
 tests/run_checks.py
 tests/support.py
@@ -60,6 +63,8 @@ tests/test_rollback.py
 tests/test_send_sessions.py
 tests/tst_selection.qml
 tests/tst_state.qml
+tests/ui_input.cpp
+tests/ui_smoke.py
 tests/widget_compile.py
 workflow/KdePickerSession.qml
 workflow/State.js
