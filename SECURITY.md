@@ -18,7 +18,7 @@ Cleanup uses ownership fingerprints and connection checks but is not an atomic c
 
 ## Publication boundary
 
-`PUBLIC_FILES.txt` is the explicit source archive inventory. `scripts/audit-public.py` checks it for excluded artifacts and recognizable credential patterns; release packaging consumes the same inventory and strips local ownership/timestamps. Initial Git staging is checked against it before publication. `.qa`, `.build`, `dist`, private baseline archives, historical machine-specific notes, unapproved images and credentials are excluded. Test device addresses and identities are synthetic fixtures.
+`PUBLIC_FILES.txt` is the explicit source archive inventory. `scripts/audit-public.py` checks it for excluded artifacts and recognizable credential patterns, and allows only the exact hash of the visually reviewed screenshot; release packaging consumes the same inventory and strips local ownership/timestamps. The complete Git index is checked against it before publication. `.qa`, `.build`, `dist`, private baseline archives, historical machine-specific notes, unapproved images and credentials are excluded. Test device addresses and identities are synthetic fixtures.
 
 Automated pattern checks supplement manual review; they cannot prove the absence of every secret. Never add real credentials to tests. Do not upload raw runtime state, full desktop screenshots or personal transfer files to issues.
 

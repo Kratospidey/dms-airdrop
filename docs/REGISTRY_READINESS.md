@@ -1,13 +1,11 @@
-# Future DMS registry submission
+# DMS registry submission
 
-No registry submission is part of release 0.2.1. Follow the current [official contribution guide](https://github.com/AvengeMedia/dms-plugin-registry/blob/master/CONTRIBUTING.md) when ready.
+The v0.2.1 integration is being prepared for submission to the [official DMS plugin registry](https://github.com/AvengeMedia/dms-plugin-registry). It is **not yet approved or available through the official marketplace**. Until acceptance, use the [manual GitHub installation](FRIEND_SETUP.md).
 
-Remaining work:
+The submission preserves `id: dmsAirDrop`, `name: AirDrop`, daemon/dankbar-widget capabilities and the existing v0.2.1 release tag. Metadata declares only Arch/Niri, with Omdrop and omdrop-owl as separately configured transfer prerequisites. Broader distro/compositor/hardware compatibility remains unverified.
 
-1. Capture and approve a clean, authentic screenshot of the actual plugin; remove private device/file information. The registry requires a reachable screenshot URL. Mock previews are not a substitute for verified UI evidence.
-2. Decide how registry users are directed through the optional native helper build and separate Omdrop/radio setup. A registry clone alone does not build the helper or provision AirDrop.
-3. Verify on an independent compatible machine and document only the distributions/compositors actually tested. Audit any newer DMS/Omdrop contract before claiming support.
-4. Create `plugins/kratospidey-dms-airdrop.json` in a registry fork with matching `id: dmsAirDrop`, `name: AirDrop`, repository URL, author, daemon/dankbar-widget capabilities, category, explicit dependencies, conservative distro/compositor claims and the approved screenshot URL.
-5. Run the registry's schema and link validators, review its then-current policies, and submit a separately authorized PR with test evidence and AI-assistance disclosure.
+A user-supplied authentic screenshot is cropped to the complete AirDrop popout, with the top bar and unrelated desktop removed. The reviewed crop is at [assets/airdrop-popout.png](../assets/airdrop-popout.png); no UI text or controls were altered.
 
-The public repository already provides a root plugin.json, license, versioned source release, installation guide, dependency information and reversible installation.
+[Marketplace setup](MARKETPLACE.md) documents what DMS clones, the explicit basic-picker recovery when the optional native helper is missing, manual KDE build instructions and the difference between frontend availability and operational AirDrop.
+
+The submission uses the current [contribution requirements](https://github.com/AvengeMedia/dms-plugin-registry/blob/master/CONTRIBUTING.md), official validators and AI-assistance disclosure. Registry acceptance remains the maintainers' decision. No independent-machine testing is claimed.

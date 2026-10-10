@@ -44,6 +44,7 @@ for file in [*ROOT.glob("*.qml"), *(ROOT / "components").glob("*.qml"), *(ROOT /
 run([qt_tool("qmltestrunner"), "-input", "tests/tst_state.qml", "-o", "-,txt"], "qml-state", env)
 run([qt_tool("qmltestrunner"), "-input", "tests/tst_selection.qml", "-o", "-,txt"], "qml-selection", env)
 run([sys.executable, "tests/controller_smoke.py"], "controller-smoke")
+run([sys.executable, "tests/marketplace_smoke.py"], "marketplace-smoke")
 run([sys.executable, "tests/picker_lifecycle.py"], "picker-lifecycle")
 run([sys.executable, "tests/kde_adapter_smoke.py"], "kde-adapter")
 run([sys.executable, "tests/notification_smoke.py"], "notification-smoke")

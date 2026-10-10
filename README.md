@@ -18,7 +18,9 @@ Send files to compatible Apple devices, receive files from them, and manage disc
 - Asynchronous transfers that survive closing the popout or reloading the plugin.
 - Brief success notifications and persistent, actionable errors.
 
-Screenshots will be added when clean captures are available. Development mockups and private desktop captures are not included in this release.
+<img src="assets/airdrop-popout.png" alt="Actual AirDrop popout in its Off state with Send Files and Receive Files controls" width="440">
+
+Authentic screenshot of the installed plugin, cropped to its popout. The golden accent follows the user’s DMS theme; no UI text or controls were altered.
 
 ## Requirements
 
@@ -70,6 +72,10 @@ python3 scripts/build-picker.py         # build/rebuild only the local helper
 `--picker basic` skips building; it does not remove a helper already built. A detected-but-failed native build aborts installation before creating a new symlink. Correct the reported error or explicitly choose the basic option.
 
 For Arch/CachyOS package names and release archive installation, see [Friend setup](docs/FRIEND_SETUP.md). Other distributions are untested.
+
+### DMS marketplace installation
+
+Registry submission status is tracked [here](docs/REGISTRY_READINESS.md); acceptance is pending. DMS clones the frontend directly and does not run this installer, install backend packages or compile the optional KDE helper. A fresh clone can recover from a missing native picker using **Use basic file picker**. Follow [marketplace setup](docs/MARKETPLACE.md) for the exact fallback/build/update/removal steps.
 
 ## First-time backend setup
 
@@ -134,6 +140,6 @@ Restoration requires AirDrop Off and refuses independently changed settings. Loc
 
 The plugin runs with your desktop user's permissions. Selecting files can start discovery and receiving; nearby devices may see you during that window. Runtime requests are private but contain selected paths briefly. Transfer confidentiality, recipient authentication and protocol behavior depend on Omdrop and the installed backend. See [Security](SECURITY.md) and [Architecture](docs/ARCHITECTURE.md).
 
-[Testing](docs/TESTING.md) documents mocked versus real checks. [Contributing](CONTRIBUTING.md) explains reporting and source changes. Future registry submission is tracked in [Registry readiness](docs/REGISTRY_READINESS.md); this release does not submit to the registry.
+[Testing](docs/TESTING.md) documents mocked versus real checks. [Contributing](CONTRIBUTING.md) explains reporting and source changes. Registry submission status is tracked in [Registry readiness](docs/REGISTRY_READINESS.md); availability requires maintainer acceptance.
 
 MIT licensed integration code. Thanks to the DMS, Quickshell, Omdrop, OWL, Qt and KDE contributors; see [third-party attribution](THIRD_PARTY.md). These dependencies are installed separately and retain their own licenses. Development used AI assistance. AirDrop is a trademark of Apple Inc. This independent integration is not affiliated with or endorsed by Apple, KDE or the DMS maintainers.

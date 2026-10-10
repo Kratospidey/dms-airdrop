@@ -61,7 +61,11 @@ PopoutComponent {
                             color: Theme.surfaceText
                         }
                         DetailText {
-                            text: root.ready && controller.active ? controller.timeLabel : "Ready to send or receive"
+                            text: !root.ready ? "Checking backend availability"
+                                : controller.state === "UNAVAILABLE" ? "Set up Omdrop and a compatible radio backend"
+                                : controller.active ? controller.timeLabel
+                                : controller.state === "OFF" ? "Ready to send or receive"
+                                : "Check status before starting a transfer"
                         }
                     }
                 }
@@ -70,6 +74,12 @@ PopoutComponent {
                 visible: root.ready && (!controller.snapshot.ok || controller.error !== "" || controller.state === "ERROR")
                 text: controller?.error || controller?.snapshot.error || "The receiver and radio disagree. Refresh status or check diagnostics."
                 color: Theme.error
+            }
+            DankButton {
+                visible: root.ready && ((!controller.snapshot.ok && !!controller.snapshot.error) || controller.error.indexOf("picker") >= 0)
+                text: "Setup guide"
+                iconName: "help_outline"
+                onClicked: Qt.openUrlExternally("https://github.com/Kratospidey/dms-airdrop/blob/main/docs/MARKETPLACE.md")
             }
             Row {
                 width: parent.width
@@ -205,6 +215,10 @@ PopoutComponent {
                 text: "Use basic file picker"
                 enabled: root.ready && controller.canPickFiles
                 onClicked: controller.useBasicPicker()
+            }
+            DetailText {
+                visible: root.ready && controller.error.indexOf("picker") >= 0 && !controller.pickerActive
+                text: "The optional KDE picker is unavailable. Use the basic picker, or open the setup guide to enable thumbnails."
             }
             DetailText {
                 visible: !root.ready || !controller.active || controller.peerMessage !== "" || (!controller.peers.length && !controller.scanning)

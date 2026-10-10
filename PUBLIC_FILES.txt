@@ -11,6 +11,7 @@ PUBLIC_FILES.txt
 README.md
 SECURITY.md
 THIRD_PARTY.md
+assets/airdrop-popout.png
 components/Command.qml
 components/DetailText.qml
 components/DeviceRow.qml
@@ -18,6 +19,7 @@ components/State.js
 docs/ARCHITECTURE.md
 docs/COMPATIBILITY.md
 docs/FRIEND_SETUP.md
+docs/MARKETPLACE.md
 docs/REGISTRY_READINESS.md
 docs/RELEASE_0.2.1.md
 docs/TESTING.md
@@ -42,6 +44,7 @@ tests/command_smoke.py
 tests/controller_smoke.py
 tests/fake_omdrop.py
 tests/kde_adapter_smoke.py
+tests/marketplace_smoke.py
 tests/native_picker.py
 tests/native_selection.cpp
 tests/notification_smoke.py
@@ -49,6 +52,7 @@ tests/picker_lifecycle.py
 tests/preview.py
 tests/run_checks.py
 tests/support.py
+tests/test_asset_audit.py
 tests/test_backend.py
 tests/test_install.py
 tests/test_publication.py

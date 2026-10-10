@@ -42,3 +42,9 @@ These are test scopes, not independent hardware certification. Release execution
 `python3 tests/native_picker.py --wayland` opens real windows and currently uses Niri for window-manager close testing. Run it only deliberately in your own desktop session. It is not part of portable CI. File transfers, incoming/outgoing confirmation and Wi-Fi stability must be tested separately on each hardware setup, with user consent and harmless files.
 
 Logs, fixtures, screenshots and rollback manifests stay under ignored .qa. Local historical rollback scripts require corresponding private baseline manifests; normal users should follow tagged source updates/uninstallation in the README.
+
+## Registry submission checks after v0.2.1
+
+The immutable release above remains the baseline. Main additionally includes 3 image-audit regression tests (102 Python tests total) and `tests/marketplace_smoke.py`. The latter loads an isolated source-root installation with no installer/native binary and a deliberately nonexistent backend. It checks unavailable/setup UI, blocked send/receive actions, native failure recovery, actual basic Qt selection with Unicode paths, cancellation and reopening. Its wrapper rejects every command except status and local file metadata inspection before calling the adapter.
+
+The authentic screenshot is privacy-reviewed and hash-pinned by the public audit; changed or unreviewed images are rejected. Registry schema/link validation runs using the official registry tools in an isolated virtual environment. These checks add no new live-radio or independent-machine evidence.

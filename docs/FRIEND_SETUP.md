@@ -1,5 +1,7 @@
 # Set up DMS AirDrop on another laptop
 
+For registry-managed clones, use [Marketplace setup](MARKETPLACE.md): DMS clones the frontend but does not run this manual symlink installer.
+
 ## 1. Check the laptop first
 
 You need a Linux desktop running DMS and Quickshell. This release was tested on CachyOS with Niri; Fedora, Ubuntu, Debian, other compositors and other CPU architectures are not verified.
