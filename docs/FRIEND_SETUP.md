@@ -1,10 +1,10 @@
 # Set up DMS AirDrop on another laptop
 
-For registry-managed clones, use [Marketplace setup](MARKETPLACE.md): DMS clones the frontend but does not run this manual symlink installer.
+AirDrop is accepted into the official registry through merged [PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029). Install through **DMS Settings → Plugins → Browse → AirDrop** and follow [Marketplace setup](MARKETPLACE.md). DMS clones the frontend but does not install the radio backend, build the optional KDE helper or run the manual symlink installer below. Choose one installation method.
 
 ## 1. Check the laptop first
 
-You need a Linux desktop running DMS and Quickshell. This release was tested on CachyOS with Niri; Fedora, Ubuntu, Debian, other compositors and other CPU architectures are not verified.
+You need a Linux desktop running DMS and Quickshell. v0.2.2 passed automated tests on CachyOS with Niri; previously confirmed live transfers predate the final marketplace fixes and were not repeated for this release. Fedora, Ubuntu, Debian, other compositors and other CPU architectures are not verified.
 
 Read [Compatibility](COMPATIBILITY.md). A normal Wi-Fi connection alone does not establish AWDL compatibility. You can install this interface before configuring AirDrop, but file transfer will remain unavailable.
 
@@ -64,17 +64,19 @@ See [Troubleshooting](TROUBLESHOOTING.md) if any stage fails. Hardware tests are
 
 ## Install from a release archive
 
-Download `dms-airdrop-0.2.1.tar.gz` and its `.sha256` from the [v0.2.1 release](https://github.com/Kratospidey/dms-airdrop/releases/tag/v0.2.1). In the download directory:
+Download `dms-airdrop-0.2.2.tar.gz` and its `.sha256` from the [v0.2.2 release](https://github.com/Kratospidey/dms-airdrop/releases/tag/v0.2.2). In the download directory:
 
 ```sh
-sha256sum -c dms-airdrop-0.2.1.tar.gz.sha256
-tar -xzf dms-airdrop-0.2.1.tar.gz
-cd dms-airdrop-0.2.1
+sha256sum -c dms-airdrop-0.2.2.tar.gz.sha256
+tar -xzf dms-airdrop-0.2.2.tar.gz
+cd dms-airdrop-0.2.2
 ./install.sh
 ./install.sh --apply
 ```
 
 The archive is source only. It includes neither a radio driver nor a helper compiled for someone else's laptop. Extract it into a permanent location before installing. For a later archive update, finish operations, disable the plugin, uninstall the old clone's symlink, install from the new permanent directory, then enable it again. Keep the old source until the update is verified.
+
+After a source update, plugin-only reloads can retain stale QML subcomponents. If the old UI persists or DMS reports `Cannot assign to non-existent property "fallbackComponent"`, finish operations and restart DMS yourself when convenient. See [Troubleshooting](TROUBLESHOOTING.md). Building only the optional helper does not require this restart.
 
 ## Remove the interface
 

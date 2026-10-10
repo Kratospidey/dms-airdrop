@@ -22,6 +22,7 @@ docs/FRIEND_SETUP.md
 docs/MARKETPLACE.md
 docs/REGISTRY_READINESS.md
 docs/RELEASE_0.2.1.md
+docs/RELEASE_0.2.2.md
 docs/REVIEW_FIXES.md
 docs/TESTING.md
 docs/TROUBLESHOOTING.md

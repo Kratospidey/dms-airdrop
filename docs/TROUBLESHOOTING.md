@@ -4,9 +4,10 @@ Start with `./install.sh check`. It is read-only and never starts AirDrop. Keep 
 
 | Symptom | Check or recovery |
 | --- | --- |
-| Plugin not listed | Confirm the symlink points to the retained clone under `${XDG_CONFIG_HOME:-$HOME/.config}/DankMaterialShell/plugins/dmsAirDrop`. Scan in DMS Settings → Plugins. Check DMS/Quickshell versions. |
+| Plugin not listed | AirDrop is in the official registry; refresh a cached DMS catalog and search under Settings → Plugins → Browse. For manual installation, confirm the symlink points to the retained clone under `${XDG_CONFIG_HOME:-$HOME/.config}/DankMaterialShell/plugins/dmsAirDrop`, then Scan for Plugins. Check DMS/Quickshell versions. |
 | Plugin enabled but no bar icon | Add AirDrop to your DankBar layout. Installer does not edit it. |
-| Old UI after update | Finish operations, disable/re-enable the plugin. Restart DMS yourself only when convenient if component caches persist. |
+| Old UI after update | A plugin-only reload can retain stale QML subcomponents. Finish transfers and temporary sessions, then restart DMS yourself when convenient if the old components persist. |
+| `Cannot assign to non-existent property "fallbackComponent"` after update | A stale cached picker type can conflict with the updated controller. A complete DMS restart resolved this observed local issue. Finish operations before restarting; the plugin does not restart the shell automatically. Fresh-process controller/picker compilation is covered by automated tests. |
 | Backend missing | Configure Omdrop 0.14.1 separately. Its executable is discovered first in `~/.local/bin`, then PATH. No setup runs automatically. |
 | Unsupported version or preservation error | Keep the audited CLI version and upstream layout. Compare your receiver setup against upstream yourself; don't bypass guards or overwrite a working service. |
 | Radio helper missing | Review the correct hardware backend's upstream instructions; frontend installation is not a driver installation. |

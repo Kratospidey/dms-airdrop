@@ -6,7 +6,7 @@ Send files to compatible Apple devices, receive files from them, and manage disc
 
 **Installing this plugin installs the interface. A separately configured, compatible AirDrop radio backend is required for transfers. It does not enable AirDrop on every Wi-Fi adapter.**
 
-[Latest release](https://github.com/Kratospidey/dms-airdrop/releases/latest) · [Friend setup guide](docs/FRIEND_SETUP.md) · [Compatibility](docs/COMPATIBILITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
+[Latest release](https://github.com/Kratospidey/dms-airdrop/releases/latest) · [v0.2.2 notes](docs/RELEASE_0.2.2.md) · [Marketplace setup](docs/MARKETPLACE.md) · [Friend setup guide](docs/FRIEND_SETUP.md) · [Compatibility](docs/COMPATIBILITY.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)
 
 ## Features
 
@@ -40,7 +40,11 @@ The CMake declarations describe build requirements, not a tested range of every 
 
 ## Install
 
-First install DMS using its [official instructions](https://danklinux.com/docs/dankmaterialshell/installation). Keep the clone in a permanent location:
+AirDrop is accepted into the **official DMS plugin registry** through merged [PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029). Install through **DMS Settings → Plugins → Browse → AirDrop**, enable it and add its widget to your DankBar. See [marketplace setup](docs/MARKETPLACE.md) for prerequisites and optional KDE enhancement. If your catalog is cached, refresh it through DMS before searching.
+
+### Manual GitHub installation
+
+The manual installer is an alternative to DMS's marketplace installation. First install DMS using its [official instructions](https://danklinux.com/docs/dankmaterialshell/installation). Keep the clone in a permanent location:
 
 ```sh
 git clone https://github.com/Kratospidey/dms-airdrop.git
@@ -55,7 +59,7 @@ The first installer invocation checks dependencies and previews changes. `--appl
 ${XDG_CONFIG_HOME:-$HOME/.config}/DankMaterialShell/plugins/dmsAirDrop
 ```
 
-Open **DMS Settings → Plugins → Scan for Plugins**, enable **AirDrop**, then add its widget to your DankBar layout. The installer never changes the layout or restarts DMS. If DMS retains old component caches after an update, reload the plugin; if still needed, restart DMS yourself when convenient.
+Open **DMS Settings → Plugins → Scan for Plugins**, enable **AirDrop**, then add its widget to your DankBar layout. The installer never changes the layout or restarts DMS. After a source update, a plugin-only reload can retain stale QML subcomponents. If the old UI persists or loading reports a missing `fallbackComponent` property, finish transfers and restart DMS yourself when convenient; see [Troubleshooting](docs/TROUBLESHOOTING.md).
 
 The clone is the installation: **moving or deleting it breaks the symlink**. Matching symlinks are idempotent; conflicting paths or duplicate IDs are refused. No packages are installed automatically, and no root access is required for the frontend.
 
@@ -75,7 +79,7 @@ For Arch/CachyOS package names and release archive installation, see [Friend set
 
 ### DMS marketplace installation
 
-**Submitted for review in [registry PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029)**; marketplace acceptance is pending. See [submission status](docs/REGISTRY_READINESS.md). DMS clones the frontend directly and does not run this installer, install backend packages or compile the optional KDE helper. A fresh clone opens the basic picker on the first **Send Files** click. Follow [marketplace setup](docs/MARKETPLACE.md) for optional KDE enhancement and update/removal steps.
+The [accepted registry entry](docs/REGISTRY_READINESS.md) makes AirDrop discoverable in DMS's marketplace. DMS clones the frontend directly and does not run this installer, install backend packages or compile the optional KDE helper. A fresh clone opens the basic picker on the first **Send Files** click. Registry acceptance does not establish radio compatibility or a working transfer setup. Follow [marketplace setup](docs/MARKETPLACE.md) for optional KDE enhancement and update/removal steps.
 
 ## First-time backend setup
 
@@ -99,7 +103,7 @@ The adapter expects the upstream Omdrop source layout (the CLI resolves to `bin/
 
 ## Hardware compatibility
 
-The development laptop uses **CachyOS + Niri, Realtek RTL8852BE-VT, rtw89_8852bte, Omdrop 0.14.1 and omdrop-owl 0.1.0**. Incoming and outgoing transfers worked on this configuration. That is one experimental hardware result, not general Realtek support.
+The development laptop uses **CachyOS + Niri, Realtek RTL8852BE-VT, rtw89_8852bte, Omdrop 0.14.1 and omdrop-owl 0.1.0**. Incoming and outgoing transfers worked on this configuration before the final marketplace corrections. That is one experimental hardware result, not general Realtek support. v0.2.2 uses automated regression validation; no new physical-device transfer tests were performed for this maintenance release.
 
 Upstream OWL currently lists MediaTek MT7925 as tested. Other drivers require deliberate experimental opt-in and may affect Wi-Fi connectivity. This installer never creates `/etc/omdrop/allow-untested`. [OWL hardware guidance](https://github.com/t4t5/omdrop-owl#supported-hardware)
 
@@ -109,7 +113,9 @@ See [the compatibility matrix](docs/COMPATIBILITY.md) before choosing a backend.
 
 ## Update and uninstall
 
-Finish transfers, close temporary sending sessions and disable AirDrop in DMS before updating source used by its symlink. Preserve local edits before changing versions:
+For a **marketplace installation**, finish transfers and temporary sessions, then use DMS's plugin update controls. The manager obtains source from the repository's default branch; it does not install a release archive or build the native helper. Do not run the manual symlink installer inside a registry-managed directory.
+
+For a **manual symlink installation**, finish transfers, close temporary sending sessions and disable AirDrop in DMS before updating source used by its symlink. Preserve local edits before changing versions:
 
 ```sh
 git status --short
@@ -118,9 +124,9 @@ git pull --ff-only
 ./install.sh --apply
 ```
 
-Re-enable the plugin afterwards. A tagged release can be selected with `git switch --detach v0.2.1` in a clean checkout; keep track of the previous tag/commit for rollback. Switching tags changes the installed source too. Never overwrite local edits to force an update.
+Re-enable the plugin afterwards. A tagged release can be selected with `git switch --detach v0.2.2` in a clean checkout; keep track of the previous tag/commit for rollback. Switching tags changes the installed source too. Never overwrite local edits to force an update. For either installation method, a complete DMS restart after finishing operations can resolve stale QML components that survive a plugin-only reload.
 
-To uninstall, first finish operations and disable the plugin in DMS:
+For marketplace removal, use DMS's own Remove action. To uninstall a manual symlink, first finish operations and disable the plugin in DMS:
 
 ```sh
 ./install.sh uninstall
@@ -140,6 +146,6 @@ Restoration requires AirDrop Off and refuses independently changed settings. Loc
 
 The plugin runs with your desktop user's permissions. Selecting files can start discovery and receiving; nearby devices may see you during that window. Runtime requests are private but contain selected paths briefly. Transfer confidentiality, recipient authentication and protocol behavior depend on Omdrop and the installed backend. See [Security](SECURITY.md) and [Architecture](docs/ARCHITECTURE.md).
 
-[Testing](docs/TESTING.md) documents mocked versus real checks. [Contributing](CONTRIBUTING.md) explains reporting and source changes. Registry submission status is tracked in [Registry readiness](docs/REGISTRY_READINESS.md); availability requires maintainer acceptance.
+[Testing](docs/TESTING.md) documents mocked versus real checks. [Contributing](CONTRIBUTING.md) explains reporting and source changes. [Registry status](docs/REGISTRY_READINESS.md) records the accepted entry and review history; acceptance does not certify hardware compatibility.
 
 MIT licensed integration code. Thanks to the DMS, Quickshell, Omdrop, OWL, Qt and KDE contributors; see [third-party attribution](THIRD_PARTY.md). These dependencies are installed separately and retain their own licenses. Development used AI assistance. AirDrop is a trademark of Apple Inc. This independent integration is not affiliated with or endorsed by Apple, KDE or the DMS maintainers.

@@ -2,7 +2,7 @@
   "id": "dmsAirDrop",
   "name": "AirDrop",
   "description": "Native, bounded AirDrop sharing through your existing Omdrop installation",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "DMS AirDrop contributors",
   "icon": "wifi_tethering",
   "type": "composite",

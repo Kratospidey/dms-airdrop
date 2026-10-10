@@ -24,7 +24,23 @@ The widget compilation needs Wayland because DMS base classes declare PanelWindo
 
 ## Release validation scope
 
-For 0.2.1:
+### v0.2.2 maintenance release
+
+The complete `python3 tests/run_checks.py` suite and the additional release audits passed on 2026-10-10 after the final release changes:
+
+- 102 Python tests; all application QML syntax checks; 6 QML behavioral cases (10 with setup/cleanup).
+- 20 monitoring cases and 3 native UI cases, including multiple popouts, countdowns, stale status, background receiving and transfer completion.
+- 20 native KDE picker cycles, 20 KDE adapter cycles and 20 Basic picker lifecycle cycles, with selection, cancellation, destruction and error recovery checks.
+- Clean-source marketplace loading with no compiled helper and a missing backend: first-click Basic, Unicode selection, cancellation/reopening and unavailable/setup mutation guards.
+- Picker capability/recovery coverage and saved Auto/KDE/Basic preferences across three fresh Quickshell processes.
+- Controller lifecycle, notification, command, DMS widget compilation and native-control preview checks.
+- Public-file/privacy auditing, manifest/resource validation and reproducible source packaging, including extraction and repackaging from the 72-file public inventory.
+
+Installed DMS 1.6.2 components and Quickshell 0.3.1 are used for fresh-process compilation and interaction fixtures, including the real `AirDropController.qml` and `picker/FilePicker.qml`. This validates their current API together. A plugin-only reload can nevertheless retain stale QML types in an existing shell; see [the documented restart recovery](TROUBLESHOOTING.md) for the previously observed `fallbackComponent` error. No live DMS restart or plugin reload was performed for this release.
+
+The GitHub release links the passing Python 3.10/3.14 CI run for its exact commit and provides the source checksum. No new physical-device AirDrop test was performed for v0.2.2. Earlier iPhone → Linux and Linux → iPhone results remain historical evidence on one development laptop, before the final marketplace fixes; other hardware and environments remain unverified.
+
+### Historical v0.2.1 validation
 
 - The Python suite includes the prior 83 tests plus 16 publication/portability cases (99 total).
 - QML tests: 7 behavioral cases, 11 including setup/cleanup.
@@ -45,7 +61,7 @@ Logs, fixtures, screenshots and rollback manifests stay under ignored .qa. Local
 
 ## Registry submission checks after v0.2.1
 
-The immutable release above remains the baseline. Main additionally includes 3 image-audit regression tests (102 Python tests total) and `tests/marketplace_smoke.py`. The latter loads an isolated source-root installation with no installer/native binary and a deliberately nonexistent backend. It checks unavailable/setup UI, blocked send/receive actions, immediate first-click Basic with no picker error, actual basic Qt selection with Unicode paths, cancellation and reopening. Its wrapper rejects every command except status and local file metadata inspection before calling the adapter.
+v0.2.2 consolidates the post-v0.2.1 corrections, including 3 image-audit regression tests (102 Python tests total) and `tests/marketplace_smoke.py`. The latter loads an isolated source-root installation with no installer/native binary and a deliberately nonexistent backend. It checks unavailable/setup UI, blocked send/receive actions, immediate first-click Basic with no picker error, actual basic Qt selection with Unicode paths, cancellation and reopening. Its wrapper rejects every command except status and local file metadata inspection before calling the adapter.
 
 `tests/picker_choice_smoke.py` exercises missing/non-executable/available helpers, installation after first use, enhanced process crashes, bounded fallback failure, cancellation during deferred recovery, stale callbacks, repeated opens and saved Basic/KDE/Auto preferences. Disk-backed mock DMS settings are reloaded by separate Quickshell processes. The enhanced executable in these capability tests is a protocol fixture; the existing native and KDE-adapter suites separately exercise the real helper. Capability checks run inside Qt, and the fixture asserts only expected startup status and requested enhanced-picker processes. These are offscreen tests, not live Niri focus or DMS-restart testing.
 
@@ -55,4 +71,4 @@ The authentic screenshot is privacy-reviewed and hash-pinned by the public audit
 
 The full suite also runs 20 controller-monitoring cases and 3 native UI cases. These cover real popout visibility, duplicate instances, reload, stale/sample deadlines, background receiving (timed/once/forever), receiving countdowns, closed-popout job completion, external sends, pending work, temporary discovery and leftover session phases, selection expiry/cleanup, peer expiry, missing backends, native scrolling and theme-responsive rows. The monitoring suite includes one real 30-second interval; other long deadlines are asserted before fixture-only acceleration. The UI input injector uses the installed C++ compiler, pkg-config and Qt 6 development tools; it only sends synthetic events to the isolated test window.
 
-Actual five-minute before/after fixtures for both Off and background receiving measure adapter and child-process creation, with shorter checks for open-popout cadence. The benchmark is separate from routine CI. Reproduction commands, results, native API choices and unverified live scenarios are recorded in [Marketplace review corrections](REVIEW_FIXES.md).
+The earlier marketplace reviews used actual five-minute before/after fixtures for both Off and background receiving to measure adapter and child-process creation, with shorter checks for open-popout cadence. Those measurements were not repeated for this documentation/version release; the monitoring regressions were rerun. The benchmark is separate from routine CI. Reproduction commands, results, native API choices and unverified live scenarios are recorded in [Marketplace review corrections](REVIEW_FIXES.md).

@@ -1,6 +1,8 @@
 # DMS marketplace installation
 
-This page describes the registry installation path for DMS 1.6.2. See [submission status](REGISTRY_READINESS.md); marketplace availability requires the registry PR to be merged. Until then use the [manual installation guide](FRIEND_SETUP.md).
+AirDrop is accepted into the official DMS plugin registry: maintainer `hthienloc` merged [PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029) on 2026-10-10 as [registry commit 444f343](https://github.com/AvengeMedia/dms-plugin-registry/commit/444f3439c915643235aee7caf45279f55fda05a8). This page describes installation through DMS 1.6.2. The [manual installation guide](FRIEND_SETUP.md) remains an alternative.
+
+Registry acceptance makes the entry available for marketplace discovery. A cached DMS catalog may need refreshing before AirDrop appears. Acceptance and discovery do not install or validate the radio backend; the three levels below remain separate.
 
 ## Three separate readiness levels
 
@@ -10,7 +12,7 @@ This page describes the registry installation path for DMS 1.6.2. See [submissio
 | Enhanced picker available | You have explicitly built the optional KDE helper locally using the installed Qt/KF6 development packages |
 | AirDrop operational | Omdrop 0.14.1, its existing receiver/identity and compatible radio hardware/backend are separately configured |
 
-The registry entry initially declares Arch/Niri, based on the CachyOS/Niri development setup. It does not certify every Arch laptop or Wi-Fi adapter. Only omdrop-owl is tested by this frontend; automatic cleanup relies on its state metadata.
+The registry entry declares Arch/Niri, based on the CachyOS/Niri development setup. It does not certify every Arch laptop or Wi-Fi adapter. Only omdrop-owl has prior transfer evidence with this frontend; automatic cleanup relies on its state metadata.
 
 ## What DMS installs
 
@@ -20,13 +22,13 @@ In DMS 1.6.2, the plugin manager clones the repository into:
 ${XDG_CONFIG_HOME:-$HOME/.config}/DankMaterialShell/plugins/dmsAirDrop
 ```
 
-This plugin uses the repository root, so no monorepo path or install-time symlink is needed. The normal Git checkout includes the full tracked repository, preserves tracked executable modes and uses the repository default branch; the manager records the installed commit in its plugin lockfile. It does not select the v0.2.1 release archive automatically.
+This plugin uses the repository root, so no monorepo path or install-time symlink is needed. The normal Git checkout includes the full tracked repository, preserves tracked executable modes and uses the repository default branch; the manager records the installed commit in its plugin lockfile. It does not select a release tag or archive automatically.
 
 The audited installation path does **not** run install.sh, execute a custom post-install hook, compile a native helper or install packages listed in registry dependencies. Those strings communicate prerequisites; they are not a package-manager transaction. The root QML and Python files already use relative resource paths and require no generated configuration.
 
 Source references: [DMS v1.6.2 plugin manager](https://github.com/AvengeMedia/DankMaterialShell/blob/v1.6.2/core/internal/plugins/manager.go), [Git clone implementation](https://github.com/AvengeMedia/DankMaterialShell/blob/v1.6.2/core/internal/plugins/registry.go), [server install handler](https://github.com/AvengeMedia/DankMaterialShell/blob/v1.6.2/core/internal/server/plugins/install.go), and [plugin discovery](https://github.com/AvengeMedia/DankMaterialShell/blob/v1.6.2/quickshell/Services/PluginService.qml).
 
-After acceptance, install AirDrop through DMS Settings → Plugins → Browse, enable it and add the widget to the bar. The manual GitHub installer remains a separate alternative. Avoid installing both copies with the same plugin ID.
+Install through **DMS Settings → Plugins → Browse → AirDrop**, enable it and add the widget to the bar. The manual GitHub installer remains a separate alternative. Avoid installing both copies with the same plugin ID.
 
 ## Basic picker on a fresh registry clone
 
@@ -66,8 +68,10 @@ Finish transfers, close temporary receiving sessions and disable the plugin befo
 
 The manual installer's uninstall command removes only its own symlink and intentionally refuses a registry-managed directory. Do not substitute it for DMS's Remove action. Keep any independently edited files backed up before a DMS update/removal.
 
+After a source update, a plugin-only reload may retain stale QML subcomponents. An old UI or `Cannot assign to non-existent property "fallbackComponent"` can result. Finish transfers and temporary sessions, then restart DMS yourself when convenient to load the updated components together. This resolved the previously observed local cache problem; no automatic restart or cache workaround is required. See [Troubleshooting](TROUBLESHOOTING.md).
+
 ## Verification scope
 
 The marketplace fixture copies the audited repository files into an isolated XDG plugin directory, without running the installer or building a helper. It loads the actual popout/controller using installed DMS components with mock session services, injects a nonexistent backend, checks mutation guards and setup text, then verifies first-click Basic opens within two seconds without a picker error, followed by selection/cancel/reopen. Separate capability/recovery tests cover executable permissions, later installation, enhanced crashes, bounded recovery and disk-backed preference fixtures across fresh Quickshell processes. Actual KDE widgets and both picker lifecycle implementations have their own offscreen tests. A separate public clone check verifies manifest paths and executable modes.
 
-This tests frontend behavior on the development host. It does not reproduce a new user's complete OS, certify new hardware or run a live AirDrop transfer. Prior transfer evidence and exact tested versions are in [Compatibility](COMPATIBILITY.md).
+This tests frontend behavior on the development host. It does not reproduce a new user's complete OS, certify new hardware or run a live AirDrop transfer. v0.2.2 was validated through automated tests only. Prior transfer evidence and exact tested versions are in [Compatibility](COMPATIBILITY.md).

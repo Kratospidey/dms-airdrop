@@ -217,8 +217,13 @@ and the recovery option for failed enhanced sessions.
 Session and popout component URLs are cache-busted when their owner is
 recreated. The native session and state helper use a fresh workflow module to
 avoid an already-cached implicit-module inventory. The widget Loader forwards
-controller, height and close properties. A plugin-only reload therefore updates
-the visible popout and chooser without restarting the shell.
+controller, height and close properties. A plugin-only reload can still retain
+stale nested QML types, including the picker coordinator. After a source update,
+`Cannot assign to non-existent property "fallbackComponent"` can indicate this
+cache mismatch. A complete DMS restart resolved the observed local issue; users
+should finish operations and restart when convenient. Fresh-process compilation
+is tested separately; it does not guarantee plugin-only hot reload clears every
+component cache. See [Troubleshooting](TROUBLESHOOTING.md).
 
 See [compatibility](COMPATIBILITY.md), [testing](TESTING.md) and
-[release notes](RELEASE_0.2.1.md) for the public support boundaries.
+[release notes](RELEASE_0.2.2.md) for the public support boundaries.

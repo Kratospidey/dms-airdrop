@@ -1,6 +1,6 @@
 # Compatibility and support boundaries
 
-Reviewed for release 0.2.1 on 2026-10-10. A successful frontend install does not certify a radio, driver or firmware.
+Reviewed for release 0.2.2 on 2026-10-10. This maintenance release uses automated regression tests; no new physical-device transfer was performed. Previously confirmed iPhone → Linux receiving and Linux → iPhone sending predate the final marketplace corrections. Official registry acceptance and a successful frontend install do not certify a radio, driver or firmware; the registry declarations remain Arch/Niri.
 
 | Scope | Evidence | Status |
 | --- | --- | --- |
@@ -8,8 +8,8 @@ Reviewed for release 0.2.1 on 2026-10-10. A successful frontend install does not
 | CachyOS, Niri, x86_64 | Existing developer laptop | Tested locally; no independent clean machine |
 | Qt 6.11.2, KF6 KIO/IconThemes 6.30.0, kio-extras 26.08.1 | Native helper build, offscreen widget tests; prior Wayland picker use | Tested locally |
 | Omdrop 0.14.1 | Existing receiver/source layout and command contract | Required exactly for mutations |
-| omdrop-owl 0.1.0, contract 0.8.1 | Existing installation | Tested backend |
-| RTL8852BE-VT + rtw89_8852bte | Incoming and outgoing transfers on one developer laptop | Experimental local result; not all Realtek adapters |
+| omdrop-owl 0.1.0, contract 0.8.1 | Existing installation and prior transfers | Previously tested backend; not retested live for v0.2.2 |
+| RTL8852BE-VT + rtw89_8852bte | Prior incoming and outgoing transfers on one developer laptop | Experimental local result; not all Realtek adapters |
 | New HOME/XDG/source paths | Isolated fixture and clone installation on same host | Portability simulation, not a fresh OS |
 | Other DMS/Quickshell releases | Versions above baseline may install | Unverified |
 | Other distributions, compositors, architectures | No hardware or desktop tests | Unverified |
