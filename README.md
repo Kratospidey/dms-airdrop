@@ -75,7 +75,7 @@ For Arch/CachyOS package names and release archive installation, see [Friend set
 
 ### DMS marketplace installation
 
-Registry submission status is tracked [here](docs/REGISTRY_READINESS.md); acceptance is pending. DMS clones the frontend directly and does not run this installer, install backend packages or compile the optional KDE helper. A fresh clone can recover from a missing native picker using **Use basic file picker**. Follow [marketplace setup](docs/MARKETPLACE.md) for the exact fallback/build/update/removal steps.
+**Submitted for review in [registry PR #1029](https://github.com/AvengeMedia/dms-plugin-registry/pull/1029)**; marketplace acceptance is pending. See [submission status](docs/REGISTRY_READINESS.md). DMS clones the frontend directly and does not run this installer, install backend packages or compile the optional KDE helper. A fresh clone can recover from a missing native picker using **Use basic file picker**. Follow [marketplace setup](docs/MARKETPLACE.md) for the exact fallback/build/update/removal steps.
 
 ## First-time backend setup
 
